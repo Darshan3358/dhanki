@@ -1,0 +1,103 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --bg-primary: #05090C;
+  --bg-secondary: #080C12;
+  --accent-gold: linear-gradient(135deg, #FFD200 0%, #FFAE00 100%);
+  --accent-gold-glow: rgba(255, 210, 0, 0.4);
+  --accent-teal: #00E5FF;
+  --accent-teal-glow: rgba(0, 229, 255, 0.5);
+  --card-bg: rgba(18, 24, 38, 0.7);
+  --card-border: rgba(255, 255, 255, 0.05);
+  --text-primary: #FFFFFF;
+  --text-secondary: #9CA3AF;
+  --glass-blur: blur(12px);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', 'Poppins', sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #252a36;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3f4d;
+}
+
+.gold-glow-text {
+  background: var(--accent-gold);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 8px var(--accent-gold-glow));
+}
+
+@keyframes shimmer-bg-gold {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer-btn {
+  background: var(--accent-gold);
+  background-size: 200% auto;
+  transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: none;
+}
+
+.shimmer-btn:hover {
+  animation: shimmer-bg-gold 1.5s infinite;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px var(--accent-gold-glow);
+}
+
+.shimmer-btn:active {
+  transform: translateY(1px);
+  filter: brightness(0.9);
+}
+
+.btn-primary {
+  background: var(--accent-gold);
+  color: #05090C !important;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  filter: grayscale(1);
+}

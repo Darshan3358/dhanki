@@ -1,0 +1,319 @@
+.investments-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.page-header {
+    margin-bottom: 3rem;
+}
+
+.page-header h1 {
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+}
+
+.page-header p {
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+/* Investment Card Styles */
+.investment-card {
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--card-border);
+    border-radius: 30px;
+    padding: 3rem;
+    margin-bottom: 4rem;
+    position: relative;
+    overflow: hidden;
+}
+
+.investment-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 6px;
+    height: 100%;
+    background: linear-gradient(to bottom, var(--accent-gold), transparent);
+}
+
+.card-header {
+    margin-bottom: 2.5rem;
+}
+
+.card-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #FFD200;
+}
+
+.card-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+.input-wrapper {
+    position: relative;
+}
+
+.input-field {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: white;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: var(--accent-gold);
+    background: rgba(255, 210, 0, 0.05);
+    box-shadow: 0 0 15px rgba(255, 210, 0, 0.1);
+}
+
+.input-helper {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    opacity: 0.6;
+}
+
+/* File Upload custom style */
+.file-upload-wrapper {
+    position: relative;
+}
+
+.file-input-custom {
+    position: absolute;
+    width: 0.1px;
+    height: 0.1px;
+    opacity: 0;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.file-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px 18px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.file-label:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 210, 0, 0.3);
+}
+
+.submit-container {
+    margin-top: 3rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.submit-btn {
+    width: 100%;
+    max-width: 400px;
+    padding: 18px;
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+/* History Section Redesign */
+.history-section {
+    margin-top: 2rem;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.export-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(0, 229, 255, 0.1);
+    color: #00E5FF;
+    border: 1px solid rgba(0, 229, 255, 0.3);
+    padding: 10px 20px;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.export-btn:hover {
+    background: rgba(0, 229, 255, 0.2);
+    box-shadow: 0 0 15px rgba(0, 229, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.table-container {
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    overflow: hidden;
+    position: relative;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th {
+    text-align: left;
+    padding: 1.5rem 2rem;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--card-border);
+    background: rgba(255, 255, 255, 0.02);
+}
+
+td {
+    padding: 1.5rem 2rem;
+    color: white;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Stunning Empty State */
+.empty-state {
+    padding: 6rem 2rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.empty-icon-wrapper {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 210, 0, 0.08) 0%, transparent 70%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 2rem;
+    color: rgba(255, 210, 0, 0.3);
+    position: relative;
+    border: 1px solid rgba(255, 210, 0, 0.1);
+}
+
+.empty-icon-wrapper::after {
+    content: '';
+    position: absolute;
+    width: 120%;
+    height: 120%;
+    border-radius: 50%;
+    border: 1px dashed rgba(255, 210, 0, 0.05);
+    animation: rotate 20s linear infinite;
+}
+
+.empty-state h3 {
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    color: white;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    max-width: 400px;
+    margin-bottom: 2.5rem;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+
+.explore-btn {
+    padding: 12px 35px;
+    font-weight: 600;
+}
+
+@keyframes rotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (max-width: 1100px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .investment-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .history-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.5rem;
+    }
+
+    .export-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    th:nth-child(3),
+    td:nth-child(3),
+    th:nth-child(5),
+    td:nth-child(5) {
+        display: none;
+    }
+
+    .page-header h1 {
+        font-size: 1.8rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .card-title {
+        font-size: 1.4rem;
+    }
+
+    .submit-btn {
+        padding: 14px;
+        font-size: 1rem;
+    }
+}

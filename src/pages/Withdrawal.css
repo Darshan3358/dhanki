@@ -1,0 +1,559 @@
+.withdrawal-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.withdrawal-header {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 2rem;
+}
+
+.withdrawal-header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.header-welcome {
+    color: var(--text-secondary);
+    max-width: 600px;
+}
+
+.connected-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 8px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.pulse-dot.active {
+    width: 8px;
+    height: 8px;
+    background: #00E5FF;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #00E5FF;
+    animation: pulse 2s infinite;
+}
+
+/* Warnings */
+.warning-alert {
+    background: rgba(255, 210, 0, 0.05);
+    border: 1px solid rgba(255, 210, 0, 0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+    align-items: center;
+}
+
+.warning-icon {
+    color: #FFD200;
+}
+
+.warning-text h4 {
+    color: #FFD200;
+    margin-bottom: 4px;
+}
+
+.warning-text p {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Stats Grid */
+.withdrawal-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+}
+
+.withdraw-stat-card {
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    transition: 0.3s;
+    position: relative;
+    overflow: hidden;
+}
+
+.withdraw-stat-card::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: var(--glow-color);
+    opacity: 0.3;
+}
+
+.stat-card-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.stat-card-header h3 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.stat-card-header p {
+    font-size: 0.75rem;
+    opacity: 0.6;
+}
+
+.withdraw-stat-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+
+.stat-progress-bar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.stat-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+}
+
+/* Main Grid */
+.withdrawal-main-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.request-card,
+.history-card {
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 2rem;
+    position: relative;
+}
+
+.card-header-flex,
+.history-header-flex {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.3rem;
+    font-weight: 700;
+}
+
+.fee-info-tag {
+    background: rgba(0, 229, 255, 0.1);
+    color: #00E5FF;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.form-group-custom {
+    margin-bottom: 1.5rem;
+}
+
+.form-group-custom label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    margin-bottom: 10px;
+}
+
+/* Source Selection */
+.source-selection {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.source-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+    position: relative;
+}
+
+.source-card:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.source-card.active {
+    border-color: #FFD200;
+    background: rgba(255, 210, 0, 0.03);
+}
+
+.source-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.source-details h4 {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.source-details p {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.active-check {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    color: #FFD200;
+}
+
+/* Input Prime */
+.input-container-premium {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    padding: 0 1rem;
+    transition: 0.3s;
+}
+
+.input-container-premium:focus-within {
+    border-color: #FFD200;
+    background: rgba(255, 255, 255, 0.06);
+    box-shadow: 0 0 20px rgba(255, 210, 0, 0.1);
+}
+
+.input-icon-left {
+    color: var(--text-secondary);
+    opacity: 0.5;
+}
+
+.withdraw-input-prime {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 14px 12px;
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    outline: none;
+}
+
+.max-btn-prime {
+    background: rgba(255, 210, 0, 0.1);
+    border: none;
+    color: #FFD200;
+    padding: 6px 14px;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.max-btn-prime:hover {
+    background: #FFD200;
+    color: var(--bg-primary);
+}
+
+.input-footer-info {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-top: 8px;
+}
+
+/* Methods */
+.method-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.method-btn-prime {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 12px;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: 0.3s;
+    font-size: 0.85rem;
+}
+
+.method-btn-prime.selected {
+    border-color: #00E5FF;
+    background: rgba(0, 229, 255, 0.05);
+    color: white;
+}
+
+.method-details-area {
+    background: rgba(255, 255, 255, 0.01);
+    border-radius: 12px;
+    padding: 1rem;
+    border: 1px dashed var(--card-border);
+    margin-top: 1rem;
+}
+
+.withdraw-input-prime.small {
+    font-size: 0.9rem;
+    padding: 10px;
+}
+
+.submit-withdraw-btn {
+    width: 100%;
+    padding: 16px;
+    margin-top: 1rem;
+    font-size: 1.1rem;
+}
+
+.submit-withdraw-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+/* Success Overlay */
+.success-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(8, 12, 18, 0.98);
+    backdrop-filter: blur(10px);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    border-radius: 24px;
+}
+
+.success-icon-container {
+    width: 100px;
+    height: 100px;
+    background: rgba(0, 229, 255, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.success-overlay h3 {
+    font-size: 1.8rem;
+    color: #00E5FF;
+    margin-bottom: 1rem;
+}
+
+.success-overlay p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* History */
+.refresh-btn-simple {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.refresh-btn-simple:hover {
+    color: #FFD200;
+    transform: rotate(180deg);
+}
+
+.withdraw-history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.withdraw-history-table th {
+    text-align: left;
+    padding: 1rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--card-border);
+}
+
+.withdraw-history-table td {
+    padding: 1.25rem 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+}
+
+.source-td {
+    display: flex;
+    flex-direction: column;
+}
+
+.source-name {
+    font-weight: 600;
+}
+
+.source-date {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.method-td {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.tx-detail-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.tx-detail-btn:hover {
+    color: #00E5FF;
+}
+
+.empty-history-withdraw {
+    padding: 5rem 2rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.empty-icon-box {
+    width: 80px;
+    height: 80px;
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+}
+
+/* Footer Grid */
+.withdrawal-footer-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+}
+
+.footer-stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.footer-stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.footer-stat-info h4 {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
+}
+
+.footer-stat-info p {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+    .withdrawal-main-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .withdrawal-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1.5rem;
+    }
+
+    .source-selection,
+    .method-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .withdrawal-footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .withdrawal-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .withdrawal-stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .request-card,
+    .history-card {
+        padding: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .withdraw-stat-value {
+        font-size: 1.4rem;
+    }
+
+    .section-title {
+        font-size: 1.1rem;
+    }
+}

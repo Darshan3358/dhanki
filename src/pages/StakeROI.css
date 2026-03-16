@@ -1,0 +1,477 @@
+.stake-roi-container {
+    animation: fadeIn 0.5s ease-out;
+}
+
+.stake-header {
+    margin-bottom: 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.stake-header h1 {
+    font-size: 2.2rem;
+    font-weight: 700;
+}
+
+.stake-header p {
+    color: var(--text-secondary);
+}
+
+.connect-header-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    border-radius: 12px;
+}
+
+/* Stat Cards Row */
+.stake-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stake-stat-card {
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    transition: 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.stake-stat-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(255, 210, 0, 0.3);
+}
+
+.stat-icon-small {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 210, 0, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #FFD200;
+    flex-shrink: 0;
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.stat-value {
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.status-badge-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--card-border);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    margin-top: 4px;
+}
+
+/* Staking Grid */
+.staking-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.5rem;
+}
+
+.new-stake-card {
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 2.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 480px;
+}
+
+.new-stake-card h2 {
+    font-size: 1.4rem;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.connect-prompt {
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+.history-card {
+    background: var(--card-bg);
+    backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--card-border);
+    border-radius: 24px;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+}
+
+.history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 1rem 1.5rem;
+    border-bottom: 1px solid var(--card-border);
+    margin-bottom: 1.5rem;
+}
+
+.history-header h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.2rem;
+}
+
+.refresh-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.refresh-btn:hover {
+    color: #FFD200;
+    transform: rotate(180deg);
+}
+
+.staking-table-wrapper {
+    overflow-x: auto;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.history-table th {
+    text-align: left;
+    padding: 12px 1rem;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    letter-spacing: 1px;
+}
+
+.empty-history {
+    padding: 4rem 1rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+/* Staking Form Styles */
+.staking-form-view {
+    width: 100%;
+    text-align: left;
+    position: relative;
+}
+
+.form-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--card-border);
+}
+
+.form-header h3 {
+    font-size: 1.2rem;
+    font-weight: 600;
+}
+
+.form-group-custom {
+    margin-bottom: 1.5rem;
+}
+
+.form-group-custom label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.input-with-max {
+    display: flex;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+.input-with-max:focus-within {
+    border-color: #FFD200;
+    box-shadow: 0 0 15px rgba(255, 210, 0, 0.1);
+}
+
+.input-with-max input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 14px 16px;
+    color: white;
+    font-size: 1rem;
+    outline: none;
+}
+
+.input-with-max button {
+    background: rgba(255, 210, 0, 0.1);
+    border: none;
+    color: #FFD200;
+    padding: 0 16px;
+    font-weight: 700;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.input-with-max button:hover {
+    background: #FFD200;
+    color: var(--bg-primary);
+}
+
+.balance-info {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    display: block;
+    margin-top: 6px;
+    text-align: right;
+}
+
+.period-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.period-item {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    transition: 0.3s;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+}
+
+.period-item:hover {
+    background: rgba(255, 255, 255, 0.06);
+    border-color: rgba(255, 210, 0, 0.3);
+}
+
+.period-item.selected {
+    background: rgba(255, 210, 0, 0.05);
+    border-color: #FFD200;
+    box-shadow: 0 0 15px rgba(255, 210, 0, 0.1);
+}
+
+.period-days {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.period-roi {
+    font-size: 0.75rem;
+    color: #00E5FF;
+    margin-top: 2px;
+}
+
+.roi-calculator {
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 12px;
+    padding: 15px;
+    margin: 1.5rem 0;
+}
+
+.calc-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.calc-row:last-child {
+    margin-bottom: 0;
+}
+
+.stake-submit-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
+
+.stake-submit-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    animation: none;
+}
+
+/* Success Overlay */
+.success-overlay {
+    position: absolute;
+    inset: -1.5rem;
+    background: rgba(8, 12, 18, 0.95);
+    backdrop-filter: blur(8px);
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    border-radius: 24px;
+}
+
+.success-overlay h4 {
+    font-size: 1.4rem;
+    margin: 1rem 0 0.5rem;
+    color: #00E5FF;
+}
+
+.success-overlay p {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+/* History Table Styles */
+.history-table th {
+    padding: 15px 1rem;
+}
+
+.history-table td {
+    padding: 15px 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    font-size: 0.9rem;
+}
+
+.status-pill {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-pill.active {
+    background: rgba(0, 229, 255, 0.1);
+    color: #00E5FF;
+    border: 1px solid rgba(0, 229, 255, 0.2);
+}
+
+.status-pill.completed {
+    background: rgba(34, 197, 94, 0.1);
+    color: #22c55e;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+}
+
+/* Info Boxes */
+.info-grid-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.info-box {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    padding: 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+}
+
+.info-box h4 {
+    font-size: 1rem;
+    margin-bottom: 4px;
+}
+
+.info-box p {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* Mobile Responsive */
+@media (max-width: 1024px) {
+    .staking-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .info-grid-row {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .stake-stats-row {
+        grid-template-columns: 1fr;
+    }
+
+    .info-grid-row {
+        grid-template-columns: 1fr;
+    }
+
+    .stake-header h1 {
+        font-size: 1.8rem;
+    }
+
+    .new-stake-card {
+        padding: 1.5rem;
+        min-height: auto;
+    }
+
+    .history-table th:nth-child(4),
+    .history-table td:nth-child(4),
+    .history-table th:nth-child(5),
+    .history-table td:nth-child(5) {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .stake-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .stat-value {
+        font-size: 1.2rem;
+    }
+}

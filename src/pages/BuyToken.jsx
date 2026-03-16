@@ -1,0 +1,729 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+    ArrowRight,
+    ArrowUpRight,
+    Upload,
+    Coins,
+    DollarSign,
+    CheckCircle2,
+    AlertCircle,
+    Activity,
+    Wallet
+} from 'lucide-react';
+import './BuyToken.css';
+import API_BASE_URL from '../apiConfig';
+import { BrowserProvider, Contract, parseUnits, formatUnits, JsonRpcProvider } from 'ethers';
+import { DHANIK_ABI, USDT_ABI, getAddresses, switchToBSC, isBSC } from '../contracts';
+
+const BuyToken = () => {
+    const [amount, setAmount] = useState('');
+    const [method, setMethod] = useState('USDT');
+    const [step, setStep] = useState(1);
+    const [txId, setTxId] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [success, setSuccess] = useState(false);
+    const [error, setError] = useState('');
+    const [history, setHistory] = useState([]);
+    const [networkName, setNetworkName] = useState('Unknown');
+    const [currentChainId, setCurrentChainId] = useState(null);
+    const [historyLoading, setHistoryLoading] = useState(true);
+    const [screenshot, setScreenshot] = useState(null);
+    const [walletAddress, setWalletAddress] = useState(localStorage.getItem('walletAddress') || '');
+    const [isConnecting, setIsConnecting] = useState(false);
+    const [tokenPrice, setTokenPrice] = useState(0.01);   // live from admin settings
+    const [networkFee, setNetworkFee] = useState(2);       // live from admin settings
+    const [priceLoading, setPriceLoading] = useState(true);
+    const [sponsorWallet, setSponsorWallet] = useState('0x0000000000000000000000000000000000000000');
+    const [inrRate, setInrRate] = useState(90);
+
+    const calculateTokens = () => {
+        if (!amount) return 0;
+        const usdtAmount = method === 'INR' ? (amount / inrRate) : parseFloat(amount);
+        return Math.floor(usdtAmount / tokenPrice);
+    };
+
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        alert('Copied to clipboard!');
+    };
+
+    const connectWallet = async () => {
+        if (typeof window.ethereum !== 'undefined') {
+            setIsConnecting(true);
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                const connectedAddress = accounts[0].toLowerCase();
+
+                // Enforce BSC network
+                const provider = new BrowserProvider(window.ethereum);
+                const network = await provider.getNetwork();
+                const chainId = Number(network.chainId);
+                if (!isBSC(chainId)) {
+                    try {
+                        await switchToBSC();
+                    } catch (switchErr) {
+                        alert('Please switch to BNB Smart Chain in your wallet.');
+                        return;
+                    }
+                }
+
+                const token = localStorage.getItem('token');
+                const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+                if (currentUser.walletAddress && currentUser.walletAddress !== '' && currentUser.walletAddress.toLowerCase() !== connectedAddress) {
+                    alert('Error: Not the correct wallet for this account. Please switch back to: ' + currentUser.walletAddress);
+                    return;
+                }
+
+                // Bind wallet to database
+                const response = await fetch(`${API_BASE_URL}/api/profile/bind-wallet`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ walletAddress: connectedAddress })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    setWalletAddress(connectedAddress);
+                    localStorage.setItem('walletAddress', connectedAddress);
+                } else if (data.message && data.message.includes('Not the correct wallet')) {
+                    alert(data.message);
+                } else {
+                    console.warn(data.message || 'Problem binding wallet');
+                }
+            } catch (err) {
+                console.error('Wallet error:', err);
+                if (err.code !== 4001) alert('Could not connect wallet');
+            } finally {
+                setIsConnecting(false);
+            }
+        } else {
+            alert('Please install MetaMask or Trust Wallet');
+            window.open('https://metamask.io/download/', '_blank');
+        }
+    };
+
+    useEffect(() => {
+        const detectNetwork = async () => {
+            if (window.ethereum) {
+                try {
+                    const provider = new BrowserProvider(window.ethereum);
+                    const network = await provider.getNetwork();
+                    const chainId = Number(network.chainId);
+                    setCurrentChainId(chainId);
+                    if (chainId === 56) setNetworkName('BNB Smart Chain');
+                    else if (chainId === 97) setNetworkName('BSC Testnet');
+                    else setNetworkName(network.name === 'unknown' ? `Chain ${chainId}` : network.name.toUpperCase());
+
+                    window.ethereum.on('chainChanged', () => window.location.reload());
+                } catch (err) {
+                    console.error('Network detection error:', err);
+                }
+            }
+        };
+
+        detectNetwork();
+        fetchPlatformSettings();
+        fetchHistory();
+        fetchSponsorWallet();
+    }, []);
+
+    const fetchSponsorWallet = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/profile/sponsor-wallet`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.sponsorWallet) setSponsorWallet(data.sponsorWallet);
+        } catch (e) {
+            console.error('Sponsor wallet fetch error');
+        }
+    };
+
+    const fetchPlatformSettings = async () => {
+        try {
+            // Fallback default network fee
+            const res = await fetch(`${API_BASE_URL}/api/token/settings`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.networkFee) setNetworkFee(data.networkFee);
+                if (data.usdtToInr) setInrRate(data.usdtToInr);
+            }
+
+            // Fetch live price from contract
+            let provider;
+            let chainId = 56;
+
+            if (window.ethereum) {
+                provider = new BrowserProvider(window.ethereum);
+                const network = await provider.getNetwork();
+                chainId = Number(network.chainId);
+            } else {
+                provider = new JsonRpcProvider('https://bsc-dataseed.binance.org/');
+            }
+
+            const { DHANIK } = getAddresses(chainId);
+            const contract = new Contract(DHANIK, DHANIK_ABI, provider);
+
+            const priceWei = await contract.currentPrice();
+            const priceFormatted = formatUnits(priceWei, 18);
+
+            // Set live on-chain price accurately
+            setTokenPrice(parseFloat(priceFormatted));
+
+        } catch (e) {
+            console.error('Could not load live price from contract, using defaults', e);
+        } finally {
+            setPriceLoading(false);
+        }
+    };
+
+    const fetchHistory = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/token/history`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            if (data.success) {
+                setHistory(data.data);
+            }
+        } catch (e) {
+            console.error('History fetch error');
+        } finally {
+            setHistoryLoading(false);
+        }
+    };
+
+    const handlePurchase = (e) => {
+        e.preventDefault();
+        if (!walletAddress) {
+            alert('Please connect your wallet first');
+            connectWallet();
+            return;
+        }
+        setStep(2);
+    };
+
+    const handleCryptoPurchase = async () => {
+        if (!amount || isNaN(amount)) return setError('Please enter a valid amount');
+        setLoading(true);
+        setError('');
+
+        try {
+            const provider = new BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+
+            // Get addresses for current network
+            const network = await provider.getNetwork();
+            const chainId = Number(network.chainId);
+            const { DHANIK, USDT } = getAddresses(chainId);
+
+            console.log(`Connecting to Network: ${chainId}, USDT: ${USDT}, Dhanik: ${DHANIK}`);
+
+            const usdtContract = new Contract(USDT, USDT_ABI, signer);
+            const dhanikContract = new Contract(DHANIK, DHANIK_ABI, signer);
+
+            const amountInWei = parseUnits(amount.toString(), 18);
+
+            // 1. Check Allowance
+            const allowance = await usdtContract.allowance(walletAddress, DHANIK);
+            if (allowance < amountInWei) {
+                const approveTx = await usdtContract.approve(DHANIK, amountInWei);
+                await approveTx.wait();
+            }
+
+            // 2. Call buyWithUSDT
+            // Use live sponsor wallet
+            const buyTx = await dhanikContract.buyWithUSDT(sponsorWallet, amountInWei);
+            const receipt = await buyTx.wait();
+
+            // 3. Notify backend of successful contract purchase
+            const token = localStorage.getItem('token');
+            const response = await fetch(`${API_BASE_URL}/api/token/purchase`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    amount,
+                    method: 'USDT',
+                    txHash: receipt.hash,
+                    status: 'Completed' // Contract handles distribution
+                })
+            });
+
+            if (response.ok) {
+                setSuccess(true);
+            } else {
+                setError('Contract call succeeded but backend sync failed');
+            }
+
+        } catch (err) {
+            console.error('Crypto purchase error:', err);
+            setError(err.reason || err.message || 'Transaction failed');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleConfirmPurchase = async () => {
+        if (!txId) return setError('Transaction ID is required');
+        if (!screenshot) return setError('Payment screenshot is required');
+
+        setLoading(true);
+        setError('');
+
+        try {
+            const token = localStorage.getItem('token');
+
+            // Use FormData to send file + fields together
+            const formData = new FormData();
+            formData.append('amount', amount);
+            formData.append('method', method);
+            formData.append('txHash', txId);
+            formData.append('paymentScreenshot', screenshot);
+
+            const response = await fetch(`${API_BASE_URL}/api/token/purchase`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                    // Note: Do NOT set Content-Type — browser sets it with boundary for FormData
+                },
+                body: formData
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                setSuccess(true);
+            } else {
+                setError(data.message || 'Purchase failed');
+            }
+        } catch (err) {
+            setError('Could not connect to server');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const switchNetwork = () => switchToBSC().catch(() => alert('Could not switch network. Please do it manually in your wallet.'));
+
+    return (
+        <div className="buy-token-container">
+            {currentChainId !== null && currentChainId !== 56 && currentChainId !== 97 && (
+                <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    style={{
+                        background: 'rgba(255, 77, 77, 0.15)',
+                        border: '1px solid #FF4D4D',
+                        padding: '1rem',
+                        borderRadius: '12px',
+                        marginBottom: '2rem',
+                        color: '#FF4D4D',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '12px'
+                    }}
+                >
+                    <AlertCircle size={24} />
+                    <div>
+                        <strong style={{ display: 'block' }}>Wrong Network Detected!</strong>
+                        <span style={{ fontSize: '0.85rem', opacity: 0.9 }}>
+                            You are connected to {networkName}. Please switch to <strong>Binance Smart Chain</strong> in MetaMask to buy tokens.
+                        </span>
+                        <button
+                            onClick={switchNetwork}
+                            style={{
+                                marginTop: '10px',
+                                background: '#FF4D4D',
+                                color: 'white',
+                                border: 'none',
+                                padding: '6px 12px',
+                                borderRadius: '6px',
+                                fontSize: '0.8rem',
+                                fontWeight: 'bold',
+                                cursor: 'pointer',
+                                display: 'block'
+                            }}
+                        >
+                            Switch to Binance Smart Chain
+                        </button>
+                    </div>
+                </motion.div>
+            )}
+
+            <motion.div
+                className="page-header"
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+            >
+                <div>
+                    <h1>Buy <span className="gold-glow-text">Dhanik Token</span></h1>
+                    <p>Acquire Dhanik tokens instantly using USDT or INR.</p>
+                </div>
+                <div className="price-tag">
+                    <Activity size={16} />
+                    {priceLoading ? (
+                        <span>Loading price...</span>
+                    ) : (
+                        <span>Price: ${tokenPrice.toFixed(4)} / DHANKI</span>
+                    )}
+                </div>
+            </motion.div>
+
+            <motion.div
+                className="wallet-status-banner"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                style={{
+                    background: 'rgba(255,255,255,0.03)',
+                    padding: '1rem',
+                    borderRadius: '15px',
+                    marginBottom: '2rem',
+                    border: '1px solid var(--card-border)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className={`status-dot ${walletAddress ? 'active' : ''}`} style={{ width: '10' }}></div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <span style={{ fontSize: '0.9rem' }}>
+                            {walletAddress ? `Connected: ${walletAddress.substring(0, 6)}...${walletAddress.substring(38)}` : 'Wallet Not Connected'}
+                        </span>
+                        {walletAddress && (
+                            <span style={{ fontSize: '0.7rem', color: currentChainId === 56 ? '#00FF88' : '#FFB300', fontWeight: 'bold' }}>
+                                Network: {networkName} {currentChainId === 56 ? '(Mainnet)' : '(Testnet/Other)'}
+                            </span>
+                        )}
+                    </div>
+                </div>
+                {!walletAddress ? (
+                    <button className="btn-primary" style={{ padding: '8px 16px', fontSize: '0.8rem' }} onClick={connectWallet} disabled={isConnecting}>
+                        {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+                    </button>
+                ) : (
+                    <div className="referral-link-badge" style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.8rem', opacity: 0.7 }}>Share & Earn:</span>
+                        <code style={{ background: 'rgba(0,0,0,0.2)', padding: '4px 8px', borderRadius: '5px', fontSize: '0.75rem' }}>
+                            {window.location.origin}/ref/{walletAddress || 'CONNECT_WALLET_FIRST'}
+                        </code>
+                        <button onClick={() => copyToClipboard(`${window.location.origin}/ref/${walletAddress || 'CONNECT_WALLET_FIRST'}`)} style={{ background: 'none', border: 'none', color: '#00E5FF', cursor: 'pointer' }}>
+                            <ArrowUpRight size={14} />
+                        </button>
+                    </div>
+                )}
+            </motion.div>
+
+            <div className="buy-grid">
+                <motion.div
+                    className="buy-card"
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    <AnimatePresence mode="wait">
+                        {success ? (
+                            <motion.div
+                                key="success"
+                                className="payment-step"
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                style={{ textAlign: 'center', padding: '2rem' }}
+                            >
+                                <CheckCircle2 size={64} color="var(--admin-success)" style={{ marginBottom: '1.5rem' }} />
+                                <h3 style={{ fontSize: '1.5rem' }}>Request Submitted!</h3>
+                                <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>
+                                    Your purchase request for {calculateTokens().toLocaleString()} DHANKI has been received.
+                                    It will be processed once verified.
+                                </p>
+                                <button
+                                    className="btn-primary full-btn"
+                                    style={{ marginTop: '2rem' }}
+                                    onClick={() => window.location.href = '/dashboard'}
+                                >
+                                    Back to Dashboard
+                                </button>
+                            </motion.div>
+                        ) : step === 1 ? (
+                            <motion.form
+                                key="form"
+                                onSubmit={handlePurchase}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                exit={{ opacity: 0 }}
+                            >
+                                <div className="form-head">
+                                    <h3>Token Purchase</h3>
+                                    <p>Select your payment method and amount</p>
+                                </div>
+
+                                <div className="method-selector">
+                                    <div
+                                        className={`method-btn ${method === 'USDT' ? 'active' : ''}`}
+                                        onClick={() => setMethod('USDT')}
+                                    >
+                                        <div className="icon"><DollarSign size={20} /></div>
+                                        <span>USDT (Tether)</span>
+                                    </div>
+                                    <div
+                                        className={`method-btn ${method === 'INR' ? 'active' : ''}`}
+                                        onClick={() => setMethod('INR')}
+                                    >
+                                        <div className="icon">₹</div>
+                                        <span>INR (Rupees)</span>
+                                    </div>
+                                </div>
+
+                                <div className="input-group-prime">
+                                    <label>Amount to Spend</label>
+                                    <div className="premium-input-container">
+                                        <div className="input-icon-box">
+                                            {method === 'USDT' ? <DollarSign size={20} /> : <span style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>₹</span>}
+                                        </div>
+                                        <input
+                                            type="number"
+                                            className="premium-buy-input"
+                                            placeholder={`Enter amount in ${method}`}
+                                            value={amount}
+                                            onChange={(e) => setAmount(e.target.value)}
+                                            required
+                                        />
+                                        <div className="input-suffix">
+                                            {method}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="preview-box">
+                                    <div className="preview-row">
+                                        <span>Estimated Tokens</span>
+                                        <span className="gold-glow-text">{calculateTokens().toLocaleString()} DHANKI</span>
+                                    </div>
+                                    <div className="preview-row">
+                                        <span>Exchange Rate</span>
+                                        <span>1 DHANKI = {tokenPrice.toFixed(4)} USDT</span>
+                                    </div>
+                                    <div className="preview-row">
+                                        <span>Network Fee</span>
+                                        <span>{networkFee} USDT</span>
+                                    </div>
+                                </div>
+
+                                <button type="submit" className="btn-primary full-btn">
+                                    Continue to Payment
+                                    <ArrowRight size={20} />
+                                </button>
+                            </motion.form>
+                        ) : (
+                            <motion.div
+                                key="payment"
+                                className="payment-step"
+                                initial={{ opacity: 0, x: 50 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -50 }}
+                            >
+                                <div className="form-head">
+                                    <h3>Finalize Payment</h3>
+                                    <p>Send {amount} {method} to the address below</p>
+                                </div>
+
+                                {error && (
+                                    <div style={{ color: '#FF4D4D', background: 'rgba(255, 77, 77, 0.1)', padding: '12px', borderRadius: '10px', marginBottom: '15px', fontSize: '0.9rem' }}>
+                                        {error}
+                                    </div>
+                                )}
+
+                                {method === 'INR' ? (
+                                    <>
+                                        <div className="qr-container">
+                                            <div className="qr-wrapper">
+                                                <img
+                                                    src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=dhanik@upi&pn=Dhanik%20Token"
+                                                    alt="Payment QR"
+                                                />
+                                            </div>
+                                            <div className="address-box">
+                                                <code>dhanik@upi</code>
+                                                <button
+                                                    className="copy-btn"
+                                                    onClick={() => copyToClipboard('dhanik@upi')}
+                                                >
+                                                    Copy
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="input-group-prime">
+                                            <label>Enter Transaction ID / Hash</label>
+                                            <input
+                                                type="text"
+                                                placeholder="Paste transaction hash here"
+                                                value={txId}
+                                                onChange={(e) => setTxId(e.target.value)}
+                                                className="prime-input"
+                                            />
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div className="crypto-confirm-box" style={{ textAlign: 'center', padding: '1rem', background: 'rgba(0, 229, 255, 0.05)', borderRadius: '15px', border: '1px dashed rgba(0, 229, 255, 0.2)', marginBottom: '1.5rem' }}>
+                                        <Wallet size={40} color="#00E5FF" style={{ marginBottom: '10px' }} />
+                                        <h4>Direct Wallet Payment</h4>
+                                        <p style={{ fontSize: '0.85rem', opacity: 0.8 }}>You are about to pay <strong>{amount} USDT</strong> + fees using your connected wallet. Tokens will be minted directly to your address.</p>
+                                    </div>
+                                )}
+
+                                {method === 'INR' && (
+                                    <div
+                                        className={`upload-box-dashed ${screenshot ? 'has-file' : ''}`}
+                                        onClick={() => document.getElementById('fileInput').click()}
+                                    >
+                                        <input
+                                            type="file"
+                                            id="fileInput"
+                                            hidden
+                                            onChange={(e) => setScreenshot(e.target.files[0])}
+                                        />
+                                        {screenshot ? (
+                                            <>
+                                                <CheckCircle2 size={24} color="#22c55e" />
+                                                <p style={{ color: '#22c55e' }}>{screenshot.name} Attached</p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Upload size={24} />
+                                                <p>Upload Payment Screenshot</p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="btn-row">
+                                    <button className="btn-outline" onClick={() => setStep(1)} disabled={loading}>Back</button>
+                                    <button
+                                        className="btn-primary shimmer-btn"
+                                        style={{ flex: 1 }}
+                                        onClick={method === 'USDT' ? handleCryptoPurchase : handleConfirmPurchase}
+                                        disabled={loading}
+                                    >
+                                        {loading ? 'Processing...' : method === 'USDT' ? 'Pay with Wallet' : 'Confirm INR Request'}
+                                    </button>
+                                </div>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </motion.div>
+
+                <motion.div
+                    className="info-column"
+                    initial={{ opacity: 0, x: 30 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                >
+                    <div className="token-details-card">
+                        <h3>Dhanik <span className="gold-glow-text">Tokenomics</span></h3>
+                        <div className="token-stat">
+                            <span>Total Supply</span>
+                            <span>20 Crore</span>
+                        </div>
+                        <div className="token-stat">
+                            <span>Network</span>
+                            <span>BEP-20 (Binance)</span>
+                        </div>
+                        <div className="token-stat">
+                            <span>Decimals</span>
+                            <span>18</span>
+                        </div>
+                        <div className="token-stat">
+                            <span>Symbol</span>
+                            <span className="gold-glow-text">DHANKI</span>
+                        </div>
+                    </div>
+
+                    <div className="referral-info-card">
+                        <h3>Referral <span className="gold-glow-text">Bonuses</span></h3>
+                        <div className="bonus-row">
+                            <div className="level-dot">L1</div>
+                            <span>Direct Referral</span>
+                            <span className="pct">5%</span>
+                        </div>
+                        <div className="bonus-row">
+                            <div className="level-dot">L2</div>
+                            <span>Indirect Level 2</span>
+                            <span className="pct">2%</span>
+                        </div>
+                        <div className="bonus-row">
+                            <div className="level-dot">L3</div>
+                            <span>Indirect Level 3</span>
+                            <span className="pct">1%</span>
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* History Section */}
+            <motion.div
+                className="buy-history-section"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+            >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h2>Recent <span className="gold-glow-text">Purchase History</span></h2>
+                </div>
+
+                <div className="history-table-container">
+                    <table className="history-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Method</th>
+                                <th>Amount</th>
+                                <th>Tokens</th>
+                                <th>TX Hash</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {historyLoading ? (
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '2rem' }}>Loading history...</td></tr>
+                            ) : history.length > 0 ? (
+                                history.map((item, idx) => (
+                                    <tr key={item._id || idx}>
+                                        <td>{new Date(item.createdAt).toLocaleDateString()}</td>
+                                        <td><span className="method-tag">{item.currency}</span></td>
+                                        <td>{item.amount.toLocaleString()}</td>
+                                        <td className="gold-glow-text">{item.tokens?.toLocaleString() || 0}</td>
+                                        <td><code>{item.txHash?.substring(0, 10)}...</code></td>
+                                        <td>
+                                            <span className={`status-pill ${item.status?.toLowerCase()}`}>
+                                                {item.status}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                ))
+                            ) : (
+                                <tr>
+                                    <td colSpan="6" style={{ textAlign: 'center', padding: '3rem', color: '#9CA3AF' }}>
+                                        No purchase records found accurately yet.
+                                    </td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </motion.div>
+        </div>
+    );
+};
+
+export default BuyToken;
