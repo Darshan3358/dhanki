@@ -187,22 +187,8 @@ const Dashboard = () => {
     useEffect(() => {
         const checkConnection = async () => {
             if (typeof window.ethereum !== 'undefined') {
-                const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-                if (accounts.length > 0) {
-                    const connectedAddress = accounts[0].toLowerCase();
-
-                    // Only mark as connected if it matches the bound wallet (if any)
-                    const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-                    if (currentUser.walletAddress && currentUser.walletAddress !== '' && currentUser.walletAddress.toLowerCase() !== connectedAddress) {
-                        setIsWalletConnected(false);
-                        setWalletAddress('');
-                        return;
-                    }
-
-                    setIsWalletConnected(true);
-                    setWalletAddress(connectedAddress);
-                    fetchBalances(connectedAddress);
-                }
+                // Remove automatic eth_accounts check to stop auto-login
+                // Only keep the listeners for when the user ALREADY has a session active in this tab
 
                 window.ethereum.on('accountsChanged', (accounts) => {
                     if (accounts.length > 0) {
@@ -213,9 +199,9 @@ const Dashboard = () => {
                             setIsWalletConnected(false);
                             setWalletAddress('');
                             alert('Error: Not the correct wallet for this account. Please switch back to: ' + currentUser.walletAddress);
-                        } else {
+                        } else if (isWalletConnected) {
+                            // Only update if we were ALREADY connected in this session
                             setWalletAddress(newAddress);
-                            setIsWalletConnected(true);
                             fetchBalances(newAddress);
                         }
                     } else {

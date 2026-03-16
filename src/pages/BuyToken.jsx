@@ -29,7 +29,7 @@ const BuyToken = () => {
     const [currentChainId, setCurrentChainId] = useState(null);
     const [historyLoading, setHistoryLoading] = useState(true);
     const [screenshot, setScreenshot] = useState(null);
-    const [walletAddress, setWalletAddress] = useState(localStorage.getItem('walletAddress') || '');
+    const [walletAddress, setWalletAddress] = useState('');
     const [isConnecting, setIsConnecting] = useState(false);
     const [tokenPrice, setTokenPrice] = useState(0.01);   // live from admin settings
     const [networkFee, setNetworkFee] = useState(2);       // live from admin settings
