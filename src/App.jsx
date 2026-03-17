@@ -35,7 +35,7 @@ function App() {
                 <Route path="/support" element={<Dashboard />} />
 
                 {/* Admin Page */}
-                <Route path="/dhanki-admin" element={<AdminDashboard />} />
+                <Route path="/dhanik-admin" element={<AdminDashboard />} />
 
                 {/* Catch all */}
                 <Route path="*" element={<Navigate to="/" replace />} />

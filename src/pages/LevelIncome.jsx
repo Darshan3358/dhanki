@@ -54,29 +54,29 @@ const LevelIncome = () => {
 
     const incomeStats = useMemo(() => {
         if (!network) return [
-            { label: 'Level 1 Income', value: '0 DHANKI', pct: '5%', color: '#FFD200', count: 0 },
-            { label: 'Level 2 Income', value: '0 DHANKI', pct: '2%', color: '#00E5FF', count: 0 },
-            { label: 'Level 3 Income', value: '0 DHANKI', pct: '1%', color: '#8B5CF6', count: 0 },
+            { label: 'Level 1 Income', value: '0 DHANIK', pct: '5%', color: '#FFD200', count: 0 },
+            { label: 'Level 2 Income', value: '0 DHANIK', pct: '2%', color: '#00E5FF', count: 0 },
+            { label: 'Level 3 Income', value: '0 DHANIK', pct: '1%', color: '#8B5CF6', count: 0 },
         ];
 
         return [
             {
                 label: 'Level 1 Income',
-                value: `${(network.levelStats?.l1?.income || 0).toLocaleString()} DHANKI`,
+                value: `${(network.levelStats?.l1?.income || 0).toLocaleString()} DHANIK`,
                 pct: '5%',
                 color: '#FFD200',
                 count: network.summary?.l1Count || 0
             },
             {
                 label: 'Level 2 Income',
-                value: `${(network.levelStats?.l2?.income || 0).toLocaleString()} DHANKI`,
+                value: `${(network.levelStats?.l2?.income || 0).toLocaleString()} DHANIK`,
                 pct: '2%',
                 color: '#00E5FF',
                 count: network.summary?.l2Count || 0
             },
             {
                 label: 'Level 3 Income',
-                value: `${(network.levelStats?.l3?.income || 0).toLocaleString()} DHANKI`,
+                value: `${(network.levelStats?.l3?.income || 0).toLocaleString()} DHANIK`,
                 pct: '1%',
                 color: '#8B5CF6',
                 count: network.summary?.l3Count || 0
@@ -128,7 +128,7 @@ const LevelIncome = () => {
                 </div>
                 <div className="total-earnings-badge">
                     <TrendingUp size={16} />
-                    <span>Total: {(network?.summary?.totalLevelIncome || 0).toLocaleString()} DHANKI</span>
+                    <span>Total: {(network?.summary?.totalLevelIncome || 0).toLocaleString()} DHANIK</span>
                 </div>
             </motion.div>
 
@@ -218,7 +218,7 @@ const LevelIncome = () => {
                                         <td className="comm-amt">
                                             <div className="amt-flex" style={{ color: '#00E5FF' }}>
                                                 <ArrowUpRight size={14} />
-                                                {item.amount.toLocaleString()} DHANKI
+                                                {item.amount.toLocaleString()} DHANIK
                                             </div>
                                         </td>
                                         <td className="date-cell">

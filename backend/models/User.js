@@ -35,7 +35,7 @@ const userSchema = mongoose.Schema({
     },
     wallet: {
         balance: { type: Number, default: 0 }, // USDT Balance (Level Income etc)
-        dhanki: { type: Number, default: 0 }, // DHANKI Token Balance
+        dhanik: { type: Number, default: 0 }, // DHANIK Token Balance
         staked: { type: Number, default: 0 }  // Staked tokens
     },
     totalInvestment: { type: Number, default: 0 }, // Total USDT value invested

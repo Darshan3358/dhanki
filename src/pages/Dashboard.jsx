@@ -462,7 +462,7 @@ const Dashboard = () => {
 
                                     <div style={{ marginTop: '15px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(245, 197, 24, 0.1)', padding: '8px 15px', borderRadius: '8px', border: '1px solid rgba(245, 197, 24, 0.2)', width: 'fit-content' }}>
                                         <Activity size={16} className="gold-glow-text" />
-                                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'white' }}>Price: ${tokenPrice > 0 ? tokenPrice.toFixed(4) : '0.0000 '} / DHANKI</span>
+                                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'white' }}>Price: ${tokenPrice > 0 ? tokenPrice.toFixed(4) : '0.0000 '} / DHANIK</span>
                                     </div>
                                 </div>
 
@@ -507,7 +507,7 @@ const Dashboard = () => {
                             {/* Token Overview Cards */}
                             <div className="overview-grid">
                                 {[
-                                    { label: 'Dhanik Token Balance', value: `${parseFloat(onChainBalance) > 0 ? parseFloat(onChainBalance).toLocaleString() : (user?.wallet?.dhanki || 0).toLocaleString()} DHANKI`, icon: <Coins />, subValue: parseFloat(onChainBalance) > 0 ? 'Live On-Chain' : `Backend Storage`, path: '/buy-token' },
+                                    { label: 'Dhanik Token Balance', value: `${parseFloat(onChainBalance) > 0 ? parseFloat(onChainBalance).toLocaleString() : (user?.wallet?.dhanik || 0).toLocaleString()} DHANIK`, icon: <Coins />, subValue: parseFloat(onChainBalance) > 0 ? 'Live On-Chain' : `Backend Storage`, path: '/buy-token' },
                                     { label: 'Commission Balance', value: `DH ${parseFloat(onChainCommission) > 0 ? parseFloat(onChainCommission).toLocaleString() : (user?.income?.total || 0).toLocaleString()}`, icon: <Activity />, subValue: parseFloat(onChainCommission) > 0 ? 'Available to Claim' : 'Total Earnings', path: '/withdrawal' },
                                     { label: 'Registration Date', value: new Date(user?.createdAt).toLocaleDateString(), icon: <TrendingUp />, subValue: 'Active Member', path: '/profile' }
                                 ].map((stat, index) => (

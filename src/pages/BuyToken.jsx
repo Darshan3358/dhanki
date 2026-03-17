@@ -39,8 +39,12 @@ const BuyToken = () => {
 
     const calculateTokens = () => {
         if (!amount) return 0;
-        const usdtAmount = method === 'INR' ? (amount / inrRate) : parseFloat(amount);
-        return Math.floor(usdtAmount / tokenPrice);
+        if (method === 'INR') {
+            return Math.floor(parseFloat(amount));
+        } else {
+            // If USDT, multiply by INR rate to get tokens (since 1 Token = 1 INR)
+            return Math.floor(parseFloat(amount) * inrRate);
+        }
     };
 
     const copyToClipboard = (text) => {
@@ -374,7 +378,7 @@ const BuyToken = () => {
                     {priceLoading ? (
                         <span>Loading price...</span>
                     ) : (
-                        <span>Price: ${tokenPrice.toFixed(4)} / DHANKI</span>
+                        <span>Price: ${tokenPrice.toFixed(4)} / DHANIK</span>
                     )}
                 </div>
             </motion.div>
@@ -443,7 +447,7 @@ const BuyToken = () => {
                                 <CheckCircle2 size={64} color="var(--admin-success)" style={{ marginBottom: '1.5rem' }} />
                                 <h3 style={{ fontSize: '1.5rem' }}>Request Submitted!</h3>
                                 <p style={{ color: 'var(--text-secondary)', marginTop: '1rem' }}>
-                                    Your purchase request for {calculateTokens().toLocaleString()} DHANKI has been received.
+                                    Your purchase request for {calculateTokens().toLocaleString()} DHANIK has been received.
                                     It will be processed once verified.
                                 </p>
                                 <button
@@ -507,11 +511,11 @@ const BuyToken = () => {
                                 <div className="preview-box">
                                     <div className="preview-row">
                                         <span>Estimated Tokens</span>
-                                        <span className="gold-glow-text">{calculateTokens().toLocaleString()} DHANKI</span>
+                                        <span className="gold-glow-text">{calculateTokens().toLocaleString()} DHANIK</span>
                                     </div>
                                     <div className="preview-row">
                                         <span>Exchange Rate</span>
-                                        <span>1 DHANKI = {tokenPrice.toFixed(4)} USDT</span>
+                                        <span>1 DHANIK = {tokenPrice.toFixed(4)} USDT</span>
                                     </div>
                                     <div className="preview-row">
                                         <span>Network Fee</span>
@@ -645,7 +649,7 @@ const BuyToken = () => {
                         </div>
                         <div className="token-stat">
                             <span>Symbol</span>
-                            <span className="gold-glow-text">DHANKI</span>
+                            <span className="gold-glow-text">DHANIK</span>
                         </div>
                     </div>
 
@@ -702,7 +706,7 @@ const BuyToken = () => {
                                         <td>{new Date(item.createdAt).toLocaleDateString()}</td>
                                         <td><span className="method-tag">{item.currency}</span></td>
                                         <td>{item.amount.toLocaleString()}</td>
-                                        <td className="gold-glow-text">{item.tokens?.toLocaleString() || 0}</td>
+                                        <td className="gold-glow-text">{(item.currency === 'INR' ? item.amount : item.tokens)?.toLocaleString() || 0}</td>
                                         <td><code>{item.txHash?.substring(0, 10)}...</code></td>
                                         <td>
                                             <span className={`status-pill ${item.status?.toLowerCase()}`}>

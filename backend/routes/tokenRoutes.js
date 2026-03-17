@@ -36,7 +36,7 @@ router.get('/settings', async (req, res) => {
         let settings = await Settings.findOne();
         if (!settings) settings = await Settings.create({});
         res.json({
-            dhankiPrice: settings.dhankiPrice,
+            dhanikPrice: settings.dhanikPrice,
             networkFee: settings.networkFee,
             minWithdrawal: settings.minWithdrawal,
             maintenanceMode: settings.maintenanceMode

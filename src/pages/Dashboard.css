@@ -100,10 +100,11 @@
 /* Main Content */
 .main-content {
     flex: 1;
-    padding: 2rem;
+    padding: 2.5rem;
     overflow-y: auto;
     max-height: 100vh;
     margin-left: 280px;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .main-content.mini-sidebar {
@@ -153,13 +154,19 @@
 }
 
 .hero-info h1 {
-    font-size: 2rem;
-    margin-bottom: 0.5rem;
+    font-size: 2.2rem;
+    font-weight: 800;
+    margin-bottom: 0.75rem;
+    background: linear-gradient(to right, #fff, rgba(255, 255, 255, 0.7));
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .hero-info p {
     color: var(--text-secondary);
     font-size: 1.1rem;
+    max-width: 500px;
 }
 
 .wallet-actions {
@@ -300,9 +307,9 @@
 /* Overview Cards */
 .overview-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    margin-bottom: 2.5rem;
 }
 
 .stat-card {
@@ -429,73 +436,100 @@
 .ref-stat-item {
     text-align: center;
     flex: 1;
+    min-width: 0;
+    /* Prevent children from expanding father */
+}
+
+.ref-stat-item p {
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 /* Responsive */
 @media (max-width: 1024px) {
-    .sidebar {
-        width: 280px !important;
-    }
-
     .main-content {
         margin-left: 0 !important;
-        padding: 1.5rem;
-        padding-top: 5.5rem;
+        padding: 6rem 1.25rem 2rem;
     }
 
     .overview-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .dashboard-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 768px) {
-    .main-content {
-        padding: 1rem;
-        padding-top: 5rem;
+    .referral-section div:first-child {
+        flex-direction: column;
+        align-items: flex-start !important;
+        gap: 1rem;
+    }
+
+    .manage-team-btn {
+        width: 100%;
+        justify-content: center;
     }
 
     .overview-grid {
         grid-template-columns: 1fr;
+    }
+
+    .hero-card {
+        flex-direction: column;
+        padding: 2.5rem 1.5rem;
+        text-align: center;
+        gap: 2rem;
+        border-radius: 24px;
+    }
+
+    .hero-info h1 {
+        font-size: 1.8rem;
+    }
+
+    .hero-info p {
+        margin: 0 auto;
+    }
+
+    .wallet-actions {
+        justify-content: center;
+        flex-wrap: wrap;
     }
 
     .income-grid {
         grid-template-columns: 1fr;
     }
 
-    .hero-card {
-        flex-direction: column;
-        text-align: center;
-        gap: 2rem;
-        padding: 1.5rem;
-    }
-
-    .wallet-balance-card {
-        text-align: center;
-        width: 100%;
-    }
-
     .referral-stats {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1rem;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.25rem;
+    }
+
+    .referral-section {
+        display: none !important;
     }
 }
 
 @media (max-width: 480px) {
     .referral-stats {
         grid-template-columns: 1fr;
-    }
-
-    .hero-info h1 {
-        font-size: 1.5rem;
+        gap: 1.5rem;
     }
 
     .balance-amount {
         font-size: 1.8rem;
+    }
+
+    .stat-card {
+        padding: 1.5rem;
+    }
+
+    .hero-card {
+        padding: 2rem 1rem;
+    }
+
+    .menu-toggle {
+        top: 1rem;
+        left: 1rem;
+        padding: 10px;
     }
 }
 
@@ -592,7 +626,8 @@
     position: fixed;
     top: 1.5rem;
     left: 1.5rem;
-    z-index: 100;
+    z-index: 10000;
+    /* Above most things but below sidebar overlay */
     background: var(--card-bg);
     border: 1px solid var(--card-border);
     padding: 12px;

@@ -35,7 +35,7 @@ const syncReferrals = async () => {
         for (const user of allUsers) {
             if (user.referredBy) {
                 const cleanRefL1 = user.referredBy.trim();
-                const sponsorL1 = await User.findOne({ 
+                const sponsorL1 = await User.findOne({
                     $or: [
                         { referralId: cleanRefL1 },
                         { walletAddress: cleanRefL1.toLowerCase() },
@@ -48,7 +48,7 @@ const syncReferrals = async () => {
 
                     if (sponsorL1.referredBy) {
                         const cleanRefL2 = sponsorL1.referredBy.trim();
-                        const sponsorL2 = await User.findOne({ 
+                        const sponsorL2 = await User.findOne({
                             $or: [
                                 { referralId: cleanRefL2 },
                                 { walletAddress: cleanRefL2.toLowerCase() },
@@ -61,7 +61,7 @@ const syncReferrals = async () => {
 
                             if (sponsorL2.referredBy) {
                                 const cleanRefL3 = sponsorL2.referredBy.trim();
-                                const sponsorL3 = await User.findOne({ 
+                                const sponsorL3 = await User.findOne({
                                     $or: [
                                         { referralId: cleanRefL3 },
                                         { walletAddress: cleanRefL3.toLowerCase() },
@@ -142,7 +142,7 @@ app.use('/api/support', require('./routes/supportRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 
 app.get('/', (req, res) => {
-    res.json({ message: 'DHANKI API is running...', status: 'Online' });
+    res.json({ message: 'DHANIK API is running...', status: 'Online' });
 });
 
 // Run listener only when not in Vercel environment

@@ -115,7 +115,7 @@ const ReferralNetwork = () => {
             level: m.level,
             joinDate: m.createdAt ? new Date(m.createdAt).toLocaleDateString() : 'N/A',
             investment: `$${(m.totalInvestment || 0).toLocaleString()}`,
-            income: `${(m.income?.total || 0).toLocaleString()} DHANKI`,
+            income: `${(m.income?.total || 0).toLocaleString()} DHANIK`,
             status: m.status || 'Active',
             rank: 'Starter'
         }));
@@ -207,7 +207,7 @@ const ReferralNetwork = () => {
                     </div>
                     <div className="network-total-income">
                         <span className="label">Total Level Income</span>
-                        <span className="value gold-glow-text">{(network?.summary?.totalLevelIncome || 0).toLocaleString()} DHANKI</span>
+                        <span className="value gold-glow-text">{(network?.summary?.totalLevelIncome || 0).toLocaleString()} DHANIK</span>
                     </div>
                 </div>
 
@@ -272,7 +272,7 @@ const ReferralNetwork = () => {
                             </div>
                             <div className="level-income-mini">
                                 <span className="pct">{lvl.percentage}%</span>
-                                <span className="val">{parseFloat(lvl.income).toLocaleString()} DHANKI</span>
+                                <span className="val">{parseFloat(lvl.income).toLocaleString()} DHANIK</span>
                             </div>
                             <div className="perf-mini-bar">
                                 <div className="bar-fill" style={{ width: `${lvl.performance}%`, background: lvl.color }}></div>

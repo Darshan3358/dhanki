@@ -35,7 +35,9 @@ import {
     PanelLeftOpen,
     RefreshCw,
     Trophy,
-    ArrowRight
+    ArrowRight,
+    ArrowRightLeft,
+    Globe
 } from 'lucide-react';
 import {
     AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell,
@@ -79,7 +81,7 @@ const AdminDashboard = () => {
     const [users, setUsers] = useState([]);
     const [transactions, setTransactions] = useState([]);
     const [settings, setSettings] = useState({
-        dhankiPrice: 0.015,
+        dhanikPrice: 0.015,
         minWithdrawal: 10,
         maintenanceMode: false,
         supportEmail: 'support@dhanik.io',
@@ -98,8 +100,17 @@ const AdminDashboard = () => {
     const [isUpdatingChain, setIsUpdatingChain] = useState(false);
     const [onChainPrice, setOnChainPrice] = useState(null);
     const [onChainInrRate, setOnChainInrRate] = useState(null);
+    const [currentPhase, setCurrentPhase] = useState(null);
+    const [manualPhase, setManualPhase] = useState("");
     const [marketInrPrice, setMarketInrPrice] = useState(null);
     const [contractAdminAddress, setContractAdminAddress] = useState(null);
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 1024);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 1024);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     const connectWallet = async () => {
         // Robust detection: check for window.ethereum or window.ethereum.providers
@@ -166,8 +177,12 @@ const AdminDashboard = () => {
                 const fetchedOnChain = formatUnits(priceWei, 18);
                 setOnChainPrice(fetchedOnChain);
 
+                const phase = await contract.currentPhase().catch(() => 1);
+                setCurrentPhase(Number(phase));
+                setManualPhase(Number(phase).toString());
+
                 // Sync the input field with real contract price
-                setSettings(prev => ({ ...prev, dhankiPrice: parseFloat(fetchedOnChain) }));
+                setSettings(prev => ({ ...prev, dhanikPrice: parseFloat(fetchedOnChain) }));
 
                 // Fetch the actual admin address from the contract
                 try {
@@ -248,7 +263,7 @@ const AdminDashboard = () => {
                 }
 
                 if (!window.confirm(
-                    `Approve INR purchase?\n\nSend ${txData.tokens?.toLocaleString()} DHANKI tokens to:\n${userAddress}\n\nThis will call transferFrom() on the BSC contract.`
+                    `Approve INR purchase?\n\nSend ${txData.amount?.toLocaleString()} DHANIK tokens (1:1 INR parity) to:\n${userAddress}\n\nThis will call transferFrom() on the BSC contract.`
                 )) return;
 
                 try {
@@ -277,13 +292,40 @@ const AdminDashboard = () => {
                     const dhanikContract = new Contract(DHANIK, DHANIK_ABI, signer);
 
                     const adminAddr = await signer.getAddress();
-                    const tokens = parseUnits(txData.tokens.toString(), 18);
+                    // Force 1:1 Ratio for INR: 100 INR = 100 Dhanik
+                    const tokenVal = txData.currency === 'INR' ? txData.amount : txData.tokens;
+                    const tokens = parseUnits(tokenVal.toString(), 18);
 
                     // transferFrom(from, to, amount) — admin-only function
                     const tx = await dhanikContract.transferFrom(adminAddr, userAddress, tokens);
                     const receipt = await tx.wait();
                     txHash = receipt.hash;
                     console.log('Token transfer successful:', txHash);
+
+                    /* 
+                    // ── On-Chain Level Income Distribution ────────────────────────────
+                    // Distribute commissions on-chain to referrers (5% L1, 2% L2, 1% L3)
+                    const tokenAmount = parseFloat(tokenVal || 0);
+                    const referrers = txData.referrers || []; // expect [{address, level, percentage}]
+
+                    if (referrers.length > 0) {
+                        alert(`Main transfer done! Now sending commissions to ${referrers.length} referrer(s) on-chain. Confirm each MetaMask popup.`);
+                    }
+
+                    for (const ref of referrers) {
+                        if (!ref.address) continue;
+                        try {
+                            const commissionTokens = parseUnits(
+                                ((tokenAmount * ref.percentage) / 100).toFixed(6), 18
+                            );
+                            const commTx = await dhanikContract.transferFrom(adminAddr, ref.address, commissionTokens);
+                            await commTx.wait();
+                            console.log(`L${ref.level} commission sent to ${ref.address}: ${commTx.hash}`);
+                        } catch (commErr) {
+                            console.warn(`Failed to send L${ref.level} commission on-chain:`, commErr.message);
+                        }
+                    }
+                    */
                 } catch (contractErr) {
                     console.error('Contract error:', contractErr);
                     alert('Contract transaction failed: ' + (contractErr.reason || contractErr.message));
@@ -308,7 +350,7 @@ const AdminDashboard = () => {
                 }
 
                 if (!window.confirm(
-                    `Approve withdrawal?\n\nSend ${txData.amount?.toLocaleString()} DHANKI to:\n${userAddress}`
+                    `Approve withdrawal?\n\nSend ${txData.amount?.toLocaleString()} DHANIK to:\n${userAddress}`
                 )) return;
 
                 try {
@@ -357,7 +399,43 @@ const AdminDashboard = () => {
             });
 
             if (res.ok) {
+                const resData = await res.json();
+
+                /*
+                // ── On-chain commission transfers for INR purchases ────────────
+                const referrers = resData.referrers || [];
+                if (referrers.length > 0 && txData?.type === 'purchase' && txData?.currency === 'INR' && adminWallet) {
+                    try {
+                        let provider = new BrowserProvider(window.ethereum);
+                        const signer = await provider.getSigner();
+                        const network = await provider.getNetwork();
+                        const { DHANIK } = getAddresses(Number(network.chainId));
+                        const dhanikContract = new Contract(DHANIK, DHANIK_ABI, signer);
+                        const adminAddr = await signer.getAddress();
+                        const tokenAmount = parseFloat(txData.tokens || 0);
+
+                        for (const ref of referrers) {
+                            if (!ref.address) continue;
+                            try {
+                                const commAmt = parseUnits(((tokenAmount * ref.percentage) / 100).toFixed(6), 18);
+                                const commTx = await dhanikContract.transferFrom(adminAddr, ref.address, commAmt);
+                                await commTx.wait();
+                                console.log(`✅ L${ref.level} commission (${ref.percentage}%) sent on-chain to ${ref.address}`);
+                            } catch (commErr) {
+                                console.warn(`⚠️ L${ref.level} commission failed:`, commErr.message);
+                            }
+                        }
+                        alert(`✅ Transaction approved and ${referrers.length} level income commission(s) sent on-chain!`);
+                    } catch (chainErr) {
+                        console.warn('Commission chain transfers failed:', chainErr.message);
+                        alert(`Transaction approved. Commission transfers partially failed: ${chainErr.message}`);
+                    }
+                } else {
+                    alert(`Transaction ${status} successfully${txHash ? ' ✅ On-chain: ' + txHash.substring(0, 10) + '...' : ''}`);
+                }
+                */
                 alert(`Transaction ${status} successfully${txHash ? ' ✅ On-chain: ' + txHash.substring(0, 10) + '...' : ''}`);
+
                 fetchAdminData();
             } else {
                 const err = await res.json();
@@ -369,13 +447,52 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleUpdateOnChainPrice = async () => {
+        if (!adminWallet) {
+            alert("Please connect your Admin Wallet (MetaMask) first to update the Smart Contract.");
+            return;
+        }
+
+        const confirmChain = window.confirm(`Update Smart Contract price to $${settings.dhanikPrice}?`);
+        if (!confirmChain) return;
+
+        setIsUpdatingChain(true);
+        try {
+            const provider = new BrowserProvider(window.ethereum);
+            const signer = await provider.getSigner();
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            const { DHANIK } = getAddresses(chainId);
+            const dhanikContract = new Contract(DHANIK, DHANIK_ABI, signer);
+
+            if (!settings.dhanikPrice || isNaN(settings.dhanikPrice)) {
+                alert("Please enter a valid price.");
+                setIsUpdatingChain(false);
+                return;
+            }
+
+            const phaseToUpdate = parseInt(manualPhase) || currentPhase || 1;
+            const priceWei = parseUnits(settings.dhanikPrice.toString(), 18);
+
+            console.log(`Updating Phase ${phaseToUpdate} price to ${settings.dhanikPrice} on-chain...`);
+            const tx = await dhanikContract.priceUpdate(phaseToUpdate, priceWei);
+            await tx.wait();
+            alert("Smart Contract price updated successfully!");
+            fetchAdminData();
+        } catch (err) {
+            console.error("Chain update error:", err);
+            alert("On-chain update failed: " + (err.reason || err.message));
+        } finally {
+            setIsUpdatingChain(false);
+        }
+    };
+
     const handleUpdateSettings = async (e) => {
         if (e) e.preventDefault();
         try {
             const token = localStorage.getItem('token');
 
             // Auto-detect if price changed relative to blockchain
-            const priceChanged = onChainPrice !== null && parseFloat(settings.dhankiPrice).toFixed(6) !== parseFloat(onChainPrice).toFixed(6);
+            const priceChanged = onChainPrice !== null && parseFloat(settings.dhanikPrice).toFixed(6) !== parseFloat(onChainPrice).toFixed(6);
             const inrRateChanged = onChainInrRate !== null && Number(settings.usdtToInr) !== Number(onChainInrRate);
 
             if (priceChanged || inrRateChanged) {
@@ -385,7 +502,7 @@ const AdminDashboard = () => {
                 }
 
                 let confirmMsg = "Blockchain Transaction Required:\n";
-                if (priceChanged) confirmMsg += `- Change Token Price: $${onChainPrice} -> $${settings.dhankiPrice}\n`;
+                if (priceChanged) confirmMsg += `- Change Token Price: $${onChainPrice} -> $${settings.dhanikPrice}\n`;
                 if (inrRateChanged) confirmMsg += `- Change INR Rate: ₹${onChainInrRate} -> ₹${settings.usdtToInr}\n`;
                 confirmMsg += "\nProceed with Smart Contract update?";
 
@@ -402,7 +519,7 @@ const AdminDashboard = () => {
 
                     if (priceChanged) {
                         const phase = Number(await dhanikContract.currentPhase().catch(() => 1));
-                        const priceWei = parseUnits(settings.dhankiPrice.toString(), 18);
+                        const priceWei = parseUnits(settings.dhanikPrice.toString(), 18);
                         const tx = await dhanikContract.priceUpdate(phase, priceWei);
                         await tx.wait();
                         console.log("On-chain price updated");
@@ -451,6 +568,37 @@ const AdminDashboard = () => {
         } catch (error) { alert('Server error'); }
     };
 
+    const handleUpdateSupportStatus = async (id, status) => {
+        if (!id) {
+            alert("Error: Message ID is missing.");
+            return;
+        }
+
+        try {
+            const token = localStorage.getItem('token');
+            const res = await fetch(`${API_BASE_URL}/api/admin/support-messages/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status })
+            });
+
+            const data = await res.json();
+
+            if (res.ok) {
+                alert(`Success: status changed to ${status}`);
+                fetchAdminData();
+            } else {
+                alert(`Error: ${data.message || 'Failed to update status'}`);
+            }
+        } catch (error) {
+            console.error('Update support status error:', error);
+            alert('Server connection error. Please try again.');
+        }
+    };
+
     const [userModal, setUserModal] = useState(null);
     const [editForm, setEditForm] = useState({});
     const [userSearch, setUserSearch] = useState('');
@@ -464,7 +612,7 @@ const AdminDashboard = () => {
                 phone: user.phone || '',
                 walletAddress: user.walletAddress || '',
                 status: user.status || 'Active',
-                dhanki: user.wallet?.dhanki || 0,
+                dhanik: user.wallet?.dhanik || 0,
                 inrBalance: user.wallet?.inrBalance || 0,
                 totalInvestment: user.totalInvestment || 0,
             });
@@ -480,7 +628,7 @@ const AdminDashboard = () => {
             u.referralId || '',
             u.status || 'Active',
             u.wallet?.inrBalance || 0,
-            u.wallet?.dhanki || 0,
+            u.wallet?.dhanik || 0,
             u.totalInvestment || 0,
             u.totalWithdrawal || 0,
             u.referrals?.l1Count || 0,
@@ -530,7 +678,7 @@ const AdminDashboard = () => {
                     phone: editForm.phone,
                     walletAddress: editForm.walletAddress,
                     status: editForm.status,
-                    dhanki: parseFloat(editForm.dhanki) || 0,
+                    dhanik: parseFloat(editForm.dhanik) || 0,
                     totalInvestment: parseFloat(editForm.totalInvestment) || 0,
                 })
             });
@@ -575,7 +723,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="admin-container">
-            {isSidebarOpen && window.innerWidth <= 1024 && (
+            {isSidebarOpen && isMobile && (
                 <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
             )}
 
@@ -583,7 +731,7 @@ const AdminDashboard = () => {
                 <div className="admin-logo">
                     <img src={logo} alt="DHANIK" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
                     <span className="logo-text">DHANIK ADMIN</span>
-                    {window.innerWidth <= 1024 && (
+                    {isMobile && (
                         <button
                             className="icon-btn-utility"
                             style={{ marginLeft: 'auto', background: 'transparent', border: 'none' }}
@@ -601,7 +749,7 @@ const AdminDashboard = () => {
                             className={`admin-nav-item ${activeTab === item.name ? 'active' : ''}`}
                             onClick={() => {
                                 setActiveTab(item.name);
-                                if (window.innerWidth <= 1024) setIsSidebarOpen(false);
+                                if (isMobile) setIsSidebarOpen(false);
                             }}
                         >
                             <span className="nav-icon">{item.icon}</span>
@@ -628,11 +776,10 @@ const AdminDashboard = () => {
                 <header className="admin-header">
                     <div className="header-left">
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            {window.innerWidth <= 1024 && (
+                            {isMobile && (
                                 <button
-                                    className="icon-btn-utility"
+                                    className="menu-toggle-btn"
                                     onClick={() => setIsSidebarOpen(true)}
-                                    style={{ background: 'var(--admin-card)', border: '1px solid var(--admin-border)' }}
                                 >
                                     <Menu size={24} />
                                 </button>
@@ -835,7 +982,7 @@ const AdminDashboard = () => {
                                             <tr>
                                                 <th>User</th>
                                                 <th>Amount</th>
-                                                <th>DHT Tokens</th>
+                                                <th>DHANIK Tokens</th>
                                                 <th>Transaction ID</th>
                                                 <th>Proof</th>
                                                 <th>Actions</th>
@@ -850,8 +997,10 @@ const AdminDashboard = () => {
                                                             <div><p style={{ fontWeight: 700 }}>{tx.user?.name}</p><p style={{ fontSize: '0.7rem', color: 'var(--admin-text-dim)' }}>{tx.user?.email}</p></div>
                                                         </div>
                                                     </td>
-                                                    <td style={{ fontWeight: 800 }}>₹{tx.amount?.toLocaleString()}</td>
-                                                    <td style={{ color: 'var(--admin-gold)', fontWeight: 800 }}>{tx.tokens?.toLocaleString()} DHT</td>
+                                                    <td style={{ fontWeight: 800 }}>{tx.currency === 'INR' ? '₹' : ''}{tx.amount?.toLocaleString()}</td>
+                                                    <td style={{ color: 'var(--admin-gold)', fontWeight: 800 }}>
+                                                        {(tx.currency === 'INR' ? tx.amount : tx.tokens)?.toLocaleString()} DHANIK
+                                                    </td>
                                                     <td><code style={{ fontSize: '0.75rem', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '6px' }}>{tx.transactionId || 'N/A'}</code></td>
                                                     <td>
                                                         {tx.paymentScreenshot ? (
@@ -928,7 +1077,7 @@ const AdminDashboard = () => {
                                                         <td>
                                                             <div className="assets-cell">
                                                                 <div className="main-balance">₹{(user.wallet?.inrBalance || 0).toLocaleString()}</div>
-                                                                <div className="sub-asset gold">{(user.wallet?.dhanki || 0).toLocaleString()} DHT</div>
+                                                                <div className="sub-asset gold">{(user.wallet?.dhanik || 0).toLocaleString()} DHANIK</div>
                                                             </div>
                                                         </td>
                                                         <td>
@@ -1082,6 +1231,7 @@ const AdminDashboard = () => {
                                             <th>Message</th>
                                             <th>Status</th>
                                             <th>Date</th>
+                                            <th>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1108,6 +1258,32 @@ const AdminDashboard = () => {
                                                         </span>
                                                     </td>
                                                     <td style={{ fontSize: '0.8rem', color: 'var(--admin-text-dim)' }}>{new Date(msg.createdAt).toLocaleString()}</td>
+                                                    <td>
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            {msg.status === 'Pending' && (
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn-primary"
+                                                                    style={{ padding: '4px 8px', fontSize: '0.7rem' }}
+                                                                    onClick={() => handleUpdateSupportStatus(msg._id?.toString() || msg._id, 'Closed')}
+                                                                >
+                                                                    Close Ticket
+                                                                </button>
+                                                            )}
+                                                            {msg.status === 'Closed' ? (
+                                                                <span style={{ fontSize: '0.7rem', color: '#00E676' }}>Resolved</span>
+                                                            ) : (
+                                                                <button
+                                                                    type="button"
+                                                                    className="btn-outline-prime"
+                                                                    style={{ padding: '4px 8px', fontSize: '0.7rem' }}
+                                                                    onClick={() => handleUpdateSupportStatus(msg._id?.toString() || msg._id, 'Replied')}
+                                                                >
+                                                                    Mark Replied
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                    </td>
                                                 </tr>
                                             ))
                                         )}
@@ -1118,88 +1294,111 @@ const AdminDashboard = () => {
                     )}
 
                     {activeTab === 'Settings' && (
-                        <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="settings-grid">
+                        <motion.div key="settings" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="settings-grid" style={{ display: 'flex', flexDirection: 'column', gap: '2.5rem' }}>
+                            {/* Card 1: Token Minting & Price Control */}
                             <div className="admin-content-card" style={{ padding: '2.5rem' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem' }}>
-                                    <Settings size={22} color="var(--admin-gold)" />
-                                    <h3>Site Parameters</h3>
+                                    <Coins size={22} color="var(--admin-gold)" />
+                                    <h3>Token Price Control</h3>
                                 </div>
-                                <form onSubmit={handleUpdateSettings}>
-                                    <div className="admin-form-grid">
-                                        <div className="form-group-admin">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <label>Dhanki Token Price (USDT)</label>
-                                                {onChainPrice && (
-                                                    <span style={{ fontSize: '0.7rem', color: 'var(--admin-gold)', fontWeight: 'bold' }}>
-                                                        On-Chain: ${parseFloat(onChainPrice).toFixed(4)}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <input type="number" step="0.0001" className="admin-input-prime" value={settings.dhankiPrice ?? ''} onChange={(e) => setSettings({ ...settings, dhankiPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })} />
+                                <div className="admin-form-grid">
+                                    <div className="form-group-admin" style={{ gridColumn: '1 / -1' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                            <label style={{ margin: 0 }}>Dhanik Token Price (USDT)</label>
+                                            {onChainPrice && (
+                                                <span style={{ fontSize: '0.7rem', color: 'var(--admin-gold)', fontWeight: 'bold' }}>
+                                                    Phase {currentPhase || '--'} On-Chain: ${parseFloat(onChainPrice).toFixed(4)}
+                                                </span>
+                                            )}
                                         </div>
-                                        {/* <div className="form-group-admin">
-                                            <label>Min Withdrawal (USDT)</label>
-                                            <input type="number" className="admin-input-prime" value={settings.minWithdrawal ?? ''} onChange={(e) => setSettings({ ...settings, minWithdrawal: e.target.value === '' ? '' : parseFloat(e.target.value) })} />
-                                        </div> */}
-                                        <div className="form-group-admin">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <label>USDT to INR Rate (₹)</label>
-                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                    {onChainInrRate !== null && (
-                                                        <span style={{ fontSize: '0.7rem', color: 'var(--admin-gold)', fontWeight: 'bold' }}>
-                                                            On-Chain: ₹{onChainInrRate}
-                                                        </span>
-                                                    )}
-                                                    {marketInrPrice && (
-                                                        <span
-                                                            style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', borderLeft: '1px solid rgba(255,255,255,0.1)', paddingLeft: '8px' }}
-                                                            onClick={() => setSettings({ ...settings, usdtToInr: marketInrPrice })}
-                                                            title="Click to use market rate"
-                                                        >
-                                                            Market: ₹{marketInrPrice}
-                                                        </span>
-                                                    )}
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-end' }}>
+                                            <div style={{ width: '90px', flexShrink: 0 }}>
+                                                <p style={{ fontSize: '0.65rem', color: 'var(--admin-text-dim)', marginBottom: '6px' }}>Target Phase</p>
+                                                <input
+                                                    type="number"
+                                                    className="admin-input-prime"
+                                                    value={manualPhase}
+                                                    onChange={(e) => setManualPhase(e.target.value)}
+                                                    placeholder="Phase"
+                                                />
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <div style={{ marginBottom: '6px' }}>
+                                                    <p style={{ fontSize: '0.65rem', color: 'var(--admin-text-dim)', margin: 0 }}>New Market Price (USDT)</p>
+                                                </div>
+                                                <div style={{ position: 'relative' }}>
+                                                    <input
+                                                        type="number"
+                                                        step="0.0001"
+                                                        className="admin-input-prime"
+                                                        style={{ paddingRight: '120px' }}
+                                                        value={settings.dhanikPrice ?? ''}
+                                                        onChange={(e) => setSettings({ ...settings, dhanikPrice: e.target.value === '' ? '' : parseFloat(e.target.value) })}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        className="btn-primary"
+                                                        style={{
+                                                            position: 'absolute',
+                                                            right: '5px',
+                                                            top: '5px',
+                                                            bottom: '5px',
+                                                            padding: '0 15px',
+                                                            fontSize: '0.75rem',
+                                                            borderRadius: '8px',
+                                                            fontWeight: 800
+                                                        }}
+                                                        onClick={handleUpdateOnChainPrice}
+                                                        disabled={isUpdatingChain}
+                                                    >
+                                                        {isUpdatingChain ? '...' : 'Update Chain'}
+                                                    </button>
                                                 </div>
                                             </div>
-                                            <input type="number" className="admin-input-prime" value={settings.usdtToInr ?? ''} onChange={(e) => setSettings({ ...settings, usdtToInr: e.target.value === '' ? '' : parseFloat(e.target.value) })} />
-                                        </div>
-                                        <div className="form-group-admin">
-                                            <label>Support Email</label>
-                                            <input type="email" className="admin-input-prime" value={settings.supportEmail ?? ''} onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })} />
-                                        </div>
-                                        <div className="form-group-admin">
-                                            <label>Live Chat Link</label>
-                                            <input type="text" className="admin-input-prime" value={settings.supportLiveChat ?? ''} onChange={(e) => setSettings({ ...settings, supportLiveChat: e.target.value })} />
-                                        </div>
-                                        <div className="form-group-admin">
-                                            <label>Official Website</label>
-                                            <input type="text" className="admin-input-prime" value={settings.supportWebsite ?? ''} onChange={(e) => setSettings({ ...settings, supportWebsite: e.target.value })} />
                                         </div>
                                     </div>
+                                </div>
 
-                                    {onChainPrice !== null && parseFloat(settings.dhankiPrice).toFixed(6) !== parseFloat(onChainPrice).toFixed(6) && (
-                                        <div style={{ margin: '1.5rem 0', padding: '1rem', background: 'rgba(245, 197, 24, 0.08)', borderRadius: '12px', border: '1px solid rgba(245, 197, 24, 0.2)' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--admin-gold)' }}>
-                                                <Activity size={16} />
-                                                <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Price Mismatch Detected</span>
-                                            </div>
-                                            <p style={{ fontSize: '0.75rem', color: 'var(--admin-text-dim)', marginTop: '4px' }}>
-                                                The value in the input ($<b>{settings.dhankiPrice}</b>) differs from the Smart Contract ($<b>{onChainPrice}</b>). Applying will trigger a blockchain transaction.
-                                            </p>
+                                {onChainPrice !== null && settings.dhanikPrice && parseFloat(settings.dhanikPrice).toFixed(6) !== parseFloat(onChainPrice).toFixed(6) && (
+                                    <div style={{ margin: '1.5rem 0', padding: '1rem', background: 'rgba(245, 197, 24, 0.08)', borderRadius: '12px', border: '1px solid rgba(245, 197, 24, 0.2)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--admin-gold)' }}>
+                                            <Activity size={16} />
+                                            <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>Price Mismatch Detected</span>
                                         </div>
-                                    )}
+                                        <p style={{ fontSize: '0.72rem', color: 'var(--admin-text-dim)', marginTop: '4px' }}>
+                                            Local: $<b>{settings.dhanikPrice}</b> vs Chain: $<b>{onChainPrice}</b>. Trigger a contract update to sync.
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
 
-                                    <button
-                                        type="submit"
-                                        className="btn-primary shimmer-btn"
-                                        style={{ width: '100%', padding: '14px', borderRadius: '14px', marginTop: '1rem' }}
-                                        disabled={isUpdatingChain}
-                                    >
-                                        {isUpdatingChain ? (
-                                            <><RefreshCw size={18} className="animate-spin" /> Updating Contract...</>
-                                        ) : 'Apply Global Parameters'}
-                                    </button>
-                                </form>
+                            {/* Card 3: Platform Contact & Links */}
+                            <div className="admin-content-card" style={{ padding: '2.5rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '2rem' }}>
+                                    <Globe size={22} color="var(--admin-neon-blue)" />
+                                    <h3>Support & Social Config</h3>
+                                </div>
+                                <div className="admin-form-grid">
+                                    <div className="form-group-admin">
+                                        <label>Support Email</label>
+                                        <input type="email" className="admin-input-prime" value={settings.supportEmail ?? ''} onChange={(e) => setSettings({ ...settings, supportEmail: e.target.value })} />
+                                    </div>
+                                    <div className="form-group-admin">
+                                        <label>Live Chat Link</label>
+                                        <input type="text" className="admin-input-prime" value={settings.supportLiveChat ?? ''} onChange={(e) => setSettings({ ...settings, supportLiveChat: e.target.value })} />
+                                    </div>
+                                    <div className="form-group-admin" style={{ gridColumn: '1 / -1' }}>
+                                        <label>Official Website URL</label>
+                                        <input type="text" className="admin-input-prime" value={settings.supportWebsite ?? ''} onChange={(e) => setSettings({ ...settings, supportWebsite: e.target.value })} />
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={handleUpdateSettings}
+                                    className="btn-outline-prime"
+                                    style={{ width: '100%', padding: '12px', borderRadius: '10px', marginTop: '10px' }}
+                                >
+                                    Update Support Info
+                                </button>
                             </div>
 
                             <div className="admin-content-card" style={{ padding: '2.5rem' }}>
@@ -1258,8 +1457,8 @@ const AdminDashboard = () => {
                                             </select>
                                         </div>
                                         <div className="form-group-admin">
-                                            <label>DHT Token Balance</label>
-                                            <input type="number" className="admin-input-prime" placeholder="DHT amount" value={editForm.dhanki} onChange={e => setEditForm({ ...editForm, dhanki: e.target.value })} />
+                                            <label>DHANIK Token Balance</label>
+                                            <input type="number" className="admin-input-prime" placeholder="DHANIK amount" value={editForm.dhanik} onChange={e => setEditForm({ ...editForm, dhanik: e.target.value })} />
                                         </div>
                                         <div className="form-group-admin">
                                             <label>Total Investment (₹)</label>

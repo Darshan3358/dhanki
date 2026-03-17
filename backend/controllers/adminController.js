@@ -70,14 +70,17 @@ const updateTransactionStatus = async (req, res) => {
             if (transaction.type === 'purchase') {
                 const user = await User.findById(transaction.user);
                 if (user) {
-                    const tokensToCredit = transaction.tokens || 0;
-                    const usdtValue = tokensToCredit * 0.01;
+                    // Force 1:1 Ratio for INR: 100 INR = 100 Dhanik
+                    const tokensToCredit = transaction.currency === 'INR' ? (transaction.amount || 0) : (transaction.tokens || 0);
+                    const usdtValue = transaction.currency === 'INR' ? (tokensToCredit / INR_RATE) : (transaction.amount || 0);
 
-                    user.wallet.dhanki += tokensToCredit;
+                    user.wallet.dhanik += tokensToCredit;
                     user.totalInvestment += usdtValue;
                     await user.save();
 
-                    // MLM Logic... (remains same)
+                    // MLM Logic — collect referrer wallet addresses for on-chain distribution
+                    const referrersForChain = [];
+
                     const distributeCommission = async (beneficiaryReferralId, percentage, level) => {
                         if (!beneficiaryReferralId) return null;
                         const sponsor = await User.findOne({
@@ -85,7 +88,7 @@ const updateTransactionStatus = async (req, res) => {
                         });
                         if (!sponsor) return null;
                         const commissionAmount = (tokensToCredit * percentage) / 100;
-                        sponsor.wallet.dhanki += commissionAmount;
+                        sponsor.wallet.dhanik += commissionAmount;
                         const incomeField = `level${level}`;
                         if (sponsor.income) {
                             sponsor.income[incomeField] += commissionAmount;
@@ -98,10 +101,20 @@ const updateTransactionStatus = async (req, res) => {
                             type: 'level_income',
                             amount: commissionAmount,
                             tokens: commissionAmount,
-                            currency: 'DHANKI',
+                            currency: 'DHANIK',
                             level,
                             status: 'completed'
                         });
+
+                        // Collect wallet for on-chain transfer
+                        if (sponsor.walletAddress && sponsor.walletAddress !== '') {
+                            referrersForChain.push({
+                                address: sponsor.walletAddress,
+                                level,
+                                percentage
+                            });
+                        }
+
                         return sponsor.referredBy;
                     };
 
@@ -112,12 +125,23 @@ const updateTransactionStatus = async (req, res) => {
                             await distributeCommission(sponsorL2Id, 1, 3);
                         }
                     }
+
+                    transaction.status = status;
+                    if (txHash) transaction.txHash = txHash;
+                    await transaction.save();
+
+                    return res.json({
+                        success: true,
+                        message: `Transaction ${status}`,
+                        transaction,
+                        referrers: referrersForChain   // <-- Frontend uses this for on-chain commission transfers
+                    });
                 }
             } else if (transaction.type === 'withdrawal') {
                 const user = await User.findById(transaction.user);
                 if (user) {
                     const amountToDeduct = transaction.tokens || transaction.amount || 0;
-                    user.wallet.dhanki = Math.max(0, user.wallet.dhanki - amountToDeduct);
+                    user.wallet.dhanik = Math.max(0, user.wallet.dhanik - amountToDeduct);
                     await user.save();
                 }
             }
@@ -132,31 +156,37 @@ const updateTransactionStatus = async (req, res) => {
     }
 };
 
+
 // @desc    Get Platform Stats
 // @route   GET /api/admin/stats
 const getPlatformStats = async (req, res) => {
     try {
         const totalUsers = await User.countDocuments({});
 
+        const settings = await Settings.findOne();
+        const INR_RATE = settings?.usdtToInr || 90;
+
         // Sum of all completed purchases (Revenue)
-        // Convert USDT to INR (assuming 1 USDT = 90 INR as per tokenController) for uniform reporting
+        // Convert USDT to INR for uniform reporting
         const totalRevenueResult = await Transaction.aggregate([
             { $match: { type: 'purchase', status: 'completed' } },
-            { $group: { 
-                _id: null, 
-                total: { 
-                    $sum: {
-                        $cond: [
-                            { $eq: ["$currency", "USDT"] },
-                            { $multiply: ["$amount", 90] },
-                            "$amount"
-                        ]
+            {
+                $group: {
+                    _id: null,
+                    total: {
+                        $sum: {
+                            $cond: [
+                                { $eq: ["$currency", "USDT"] },
+                                { $multiply: ["$amount", INR_RATE] },
+                                "$amount"
+                            ]
+                        }
                     }
-                } 
-            } }
+                }
+            }
         ]);
 
-        // Sum of all DHANKI tokens sold
+        // Sum of all DHANIK tokens sold
         const totalTokensResult = await Transaction.aggregate([
             { $match: { type: 'purchase', status: 'completed' } },
             { $group: { _id: null, total: { $sum: '$tokens' } } }
@@ -198,7 +228,7 @@ const updateSettings = async (req, res) => {
         if (!settings) {
             settings = new Settings(req.body);
         } else {
-            settings.dhankiPrice = req.body.dhankiPrice ?? settings.dhankiPrice;
+            settings.dhanikPrice = req.body.dhanikPrice ?? settings.dhanikPrice;
             // Removed networkFee as per user request
             settings.minWithdrawal = req.body.minWithdrawal ?? settings.minWithdrawal;
             settings.usdtToInr = req.body.usdtToInr ?? settings.usdtToInr;
@@ -228,6 +258,25 @@ const getSupportMessages = async (req, res) => {
     }
 };
 
+// @desc    Update support message status (Admin)
+// @route   PUT /api/admin/support-messages/:id
+const updateSupportMessageStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+        const message = await SupportMessage.findByIdAndUpdate(
+            req.params.id,
+            { status },
+            { new: true }
+        );
+
+        if (!message) return res.status(404).json({ message: 'Message not found' });
+
+        res.json({ success: true, message: 'Support message status updated', status: message.status });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Update user wallet balance (Admin manual adjustment)
 // @route   PUT /api/admin/users/:id/wallet
 const updateUserWallet = async (req, res) => {
@@ -235,9 +284,9 @@ const updateUserWallet = async (req, res) => {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const { dhanki } = req.body;
-        if (dhanki !== undefined) {
-            user.wallet.dhanki = parseFloat(dhanki);
+        const { dhanik } = req.body;
+        if (dhanik !== undefined) {
+            user.wallet.dhanik = parseFloat(dhanik);
         }
         await user.save();
         res.json({ message: 'Wallet updated', wallet: user.wallet });
@@ -253,14 +302,14 @@ const updateUserData = async (req, res) => {
         const user = await User.findById(req.params.id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const { name, email, phone, walletAddress, status, dhanki, totalInvestment } = req.body;
+        const { name, email, phone, walletAddress, status, dhanik, totalInvestment } = req.body;
 
         if (name !== undefined) user.name = name;
         if (email !== undefined) user.email = email;
         if (phone !== undefined) user.phone = phone;
         if (walletAddress !== undefined) user.walletAddress = walletAddress;
         if (status !== undefined) user.status = status;
-        if (dhanki !== undefined) user.wallet.dhanki = parseFloat(dhanki);
+        if (dhanik !== undefined) user.wallet.dhanik = parseFloat(dhanik);
         if (totalInvestment !== undefined) user.totalInvestment = parseFloat(totalInvestment);
 
         await user.save();
@@ -280,5 +329,6 @@ module.exports = {
     getPlatformStats,
     getSettings,
     updateSettings,
-    getSupportMessages
+    getSupportMessages,
+    updateSupportMessageStatus
 };

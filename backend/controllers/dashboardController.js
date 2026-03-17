@@ -7,18 +7,18 @@ const getDashboardStats = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
 
-        // In a real app, these would come from database aggregations
+        // Update to match current User schema
         const stats = {
-            dhankiBalance: user.balances.dhanki,
+            dhanikBalance: user.wallet.dhanik,
             tokenPrice: 0.01,
-            totalEarnings: user.incomeEarned.total,
-            walletBalance: user.balances.usdt + (user.balances.inr / 90),
+            totalEarnings: user.income.total,
+            walletBalance: user.wallet.balance,
             levelIncome: {
-                l1: user.incomeEarned.level1,
-                l2: user.incomeEarned.level2,
-                l3: user.incomeEarned.level3
+                l1: user.income.level1,
+                l2: user.income.level2,
+                l3: user.income.level3
             },
-            referralCount: user.referrals.level1.length + user.referrals.level2.length + user.referrals.level3.length
+            referralCount: (user.referrals.level1?.length || 0) + (user.referrals.level2?.length || 0) + (user.referrals.level3?.length || 0)
         };
 
         res.json(stats);

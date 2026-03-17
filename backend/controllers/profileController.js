@@ -29,8 +29,8 @@ const getUserProfile = async (req, res) => {
             const approvedWithdrawals = withdrawalResult[0]?.total || 0;
 
             // Update user object with calculated values for frontend display
-            user.wallet.dhanki = approvedPurchases + approvedIncome - approvedWithdrawals;
-            
+            user.wallet.dhanik = approvedPurchases + approvedIncome - approvedWithdrawals;
+
             // For total investment, ensure we correspond to what was actually approved
             // If amount was in USDT, use that, if INR was converted, use the recorded amount.
             user.totalInvestment = purchaseResult[0]?.totalInvestment || 0;
@@ -104,11 +104,11 @@ const bindWallet = async (req, res) => {
         }
 
         // Check if this wallet is bound to ANY other user
-        const walletExists = await User.findOne({ 
+        const walletExists = await User.findOne({
             walletAddress: walletAddress.toLowerCase(),
-            _id: { $ne: user._id } 
+            _id: { $ne: user._id }
         });
-        
+
         if (walletExists) {
             return res.status(400).json({ message: 'This wallet is already bound to another user portal' });
         }
@@ -118,10 +118,10 @@ const bindWallet = async (req, res) => {
         user.referralId = walletAddress.toLowerCase();
         await user.save();
 
-        res.json({ 
+        res.json({
             success: true,
-            message: 'Wallet successfully linked to your portal', 
-            walletAddress: user.walletAddress 
+            message: 'Wallet successfully linked to your portal',
+            walletAddress: user.walletAddress
         });
     } catch (error) {
         res.status(500).json({ message: error.message });

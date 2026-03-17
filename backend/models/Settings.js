@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const settingsSchema = new mongoose.Schema({
-    dhankiPrice: { type: Number, default: 0.015 },
+    dhanikPrice: { type: Number, default: 0.015 },
     minWithdrawal: { type: Number, default: 10 },
     usdtToInr: { type: Number, default: 90 },
     maintenanceMode: { type: Boolean, default: false },

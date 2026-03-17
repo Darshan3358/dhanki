@@ -72,7 +72,7 @@ const Register = () => {
 
                 // Redirect based on isAdmin field (1 = Admin, 0 = User)
                 if (data.isAdmin === 1) {
-                    navigate('/dhanki-admin');
+                    navigate('/dhanik-admin');
                 } else {
                     navigate('/dashboard');
                 }

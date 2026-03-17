@@ -9,7 +9,8 @@ const {
     getPlatformStats,
     getSettings,
     updateSettings,
-    getSupportMessages
+    getSupportMessages,
+    updateSupportMessageStatus
 } = require('../controllers/adminController');
 const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
@@ -33,5 +34,6 @@ router.put('/transactions/:id', protect, adminOnly, updateTransactionStatus);
 router.get('/settings', protect, adminOnly, getSettings);
 router.put('/settings', protect, adminOnly, updateSettings);
 router.get('/support-messages', protect, adminOnly, getSupportMessages);
+router.put('/support-messages/:id', protect, adminOnly, updateSupportMessageStatus);
 
 module.exports = router;

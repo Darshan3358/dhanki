@@ -70,7 +70,7 @@ const Support = () => {
     };
 
     const faqs = [
-        { q: "How do I purchase Dhanki tokens?", a: "Go to the 'Buy Token' section, select your payment method (INR or USDT), enter the amount, and follow the payment instructions." },
+        { q: "How do I purchase Dhanik tokens?", a: "Go to the 'Buy Token' section, select your payment method (INR or USDT), enter the amount, and follow the payment instructions." },
         { q: "What is the referral commission structure?", a: "We offer a 3-level commission structure: Level 1 (5%), Level 2 (2%), and Level 3 (1%)." },
         { q: "How long does it take to credit tokens?", a: "Tokens are usually credited instantly after the transaction is verified by our team, typically within 15-30 minutes." },
         { q: "Can I withdraw my referral earnings?", a: "Yes, referral earnings are credited to your main wallet and can be withdrawn according to our withdrawal policy." }
@@ -184,7 +184,7 @@ const Support = () => {
                     <div className="company-info-card">
                         <div className="shield-header">
                             <ShieldCheck size={32} className="gold-glow-text" />
-                            <h3>Official DHANKIK</h3>
+                            <h3>Official DHANIK</h3>
                         </div>
                         <p className="company-desc">
                             Dhanik Token is a decentralized digital asset built on the Binance Smart Chain. Our mission is to provide a transparent and efficient ecosystem for digital investments.

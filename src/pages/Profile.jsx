@@ -140,7 +140,7 @@ const Profile = () => {
     };
 
     const userStats = [
-        { label: 'Token Earnings', value: `${(user?.income?.total || 0).toLocaleString()} DHANKI`, icon: <Coins size={18} />, color: '#FFD200' },
+        { label: 'Token Earnings', value: `${(user?.income?.total || 0).toLocaleString()} DHANIK`, icon: <Coins size={18} />, color: '#FFD200' },
         { label: 'Direct Team', value: `${user?.referrals?.level1?.length || 0} Users`, icon: <Users size={18} />, color: '#00E5FF' },
         { label: 'Platform Rank', value: 'Starter', icon: <Award size={18} />, color: '#8B5CF6' },
         { label: 'Account Status', value: user?.status || 'Active', icon: <ShieldCheck size={18} />, color: '#00E676' },

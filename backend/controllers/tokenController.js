@@ -1,6 +1,7 @@
 const Transaction = require('../models/Transaction');
 const User = require('../models/User');
 const Buy = require('../models/Buy');
+const Settings = require('../models/Settings');
 
 // @desc    Purchase tokens and distribute multi-level commission
 // @route   POST /api/token/purchase
@@ -23,13 +24,22 @@ const purchaseTokens = async (req, res) => {
         // If transaction already completed in wallet (Crypto), we just record and sync
         const isContractPurchase = status === 'Completed' && method === 'USDT';
 
-        // Standard Configuration
-        const TOKEN_PRICE = 0.01; // USDT
-        const INR_RATE = 90; // 1 USDT = 90 INR
+        // Fetch current rate from settings
+        const settings = await Settings.findOne();
+        const INR_RATE = settings?.usdtToInr || 90;
 
-        // Calculate investment value in USDT
-        const usdtValue = method === 'INR' ? (amount / INR_RATE) : Number(amount);
-        const tokensToCredit = usdtValue / TOKEN_PRICE;
+        // Calculate investment value and tokens (1 INR = 1 DHANIK)
+        let tokensToCredit;
+        let usdtValue;
+
+        if (method === 'INR') {
+            tokensToCredit = Number(amount);
+            usdtValue = tokensToCredit / INR_RATE;
+        } else {
+            // If USDT, convert to INR first to get tokens
+            usdtValue = Number(amount);
+            tokensToCredit = usdtValue * INR_RATE;
+        }
 
         // Screenshot filename (uploaded via multer)
         const screenshotFile = req.file ? req.file.filename : null;
@@ -57,11 +67,11 @@ const purchaseTokens = async (req, res) => {
             status: isContractPurchase ? 'completed' : 'pending'
         });
 
-        // 3. Update User's Dhanki balance and total investment
+        // 3. Update User's Dhanik balance and total investment
         // ONLY if it's a completed contract purchase. 
         // For INR/Pending, this happens in admin approval.
         if (isContractPurchase) {
-            user.wallet.dhanki += tokensToCredit;
+            user.wallet.dhanik += tokensToCredit;
             user.totalInvestment += usdtValue;
             await user.save();
         }
@@ -77,7 +87,7 @@ const purchaseTokens = async (req, res) => {
                 if (!sponsor) return null;
 
                 const commissionAmount = (tokensToCredit * percentage) / 100;
-                sponsor.wallet.dhanki += commissionAmount;
+                sponsor.wallet.dhanik += commissionAmount;
 
                 const incomeField = `level${level}`;
                 sponsor.income[incomeField] += commissionAmount;
@@ -91,7 +101,7 @@ const purchaseTokens = async (req, res) => {
                     type: 'level_income',
                     amount: commissionAmount,
                     tokens: commissionAmount,
-                    currency: 'DHANKI',
+                    currency: 'DHANIK',
                     txHash: txHash || `INTERNAL_${Date.now()}`,
                     level,
                     status: 'completed'
@@ -111,7 +121,7 @@ const purchaseTokens = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: `${tokensToCredit.toLocaleString()} DHANKI tokens credited successfully.`,
+            message: `${tokensToCredit.toLocaleString()} DHANIK tokens credited successfully.`,
             transaction: purchaseTx
         });
 
@@ -168,7 +178,7 @@ const requestWithdrawal = async (req, res) => {
             user: userId,
             type: 'withdrawal',
             amount: Number(amount),
-            currency: 'DHANKI',
+            currency: 'DHANIK',
             source: source, // 'Level Income' or 'Total Income'
             method: method, // 'Bank Transfer' or 'MetaMask'
             paymentDetails: details,

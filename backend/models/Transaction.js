@@ -8,8 +8,8 @@ const transactionSchema = new mongoose.Schema({
         required: true
     },
     amount: { type: Number, required: true }, // Amount in fiat or crypto
-    tokens: { type: Number }, // Amount of DHANKI tokens
-    currency: { type: String, default: 'USDT' }, // USDT, INR, DHANKI
+    tokens: { type: Number }, // Amount of DHANIK tokens
+    currency: { type: String, default: 'USDT' }, // USDT, INR, DHANIK
 
     // For level income
     fromUser: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Who generated the income
