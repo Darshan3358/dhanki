@@ -3,15 +3,17 @@ import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './AdminPage/AdminDashboard';
+import LandingPage from './pages/LandingPage';
 
-// If someone lands on / with ?ref=0xABC, redirect them straight to /register?ref=0xABC
+// If someone lands on / with ?ref=0xABC, we can keep them on landing or redirect.
+// The user wants landing page to be visible.
 const HomeRedirect = () => {
     const [params] = useSearchParams();
     const ref = params.get('ref');
     if (ref) {
         return <Navigate to={`/register?ref=${ref}`} replace />;
     }
-    return <Login />;
+    return <LandingPage />;
 };
 
 function App() {

@@ -49,4 +49,19 @@ const getFaqs = async (req, res) => {
     res.json(faqs);
 };
 
-module.exports = { contactSupport, getFaqs, getContactInfo };
+// @desc    Get user's support tickets
+// @route   GET /api/support/my-tickets
+const getUserTickets = async (req, res) => {
+    try {
+        if (!req.user || !req.user._id) {
+            return res.status(401).json({ message: 'User not identified' });
+        }
+
+        const tickets = await SupportMessage.find({ user: req.user._id }).sort({ createdAt: -1 });
+        res.json(tickets);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+module.exports = { contactSupport, getFaqs, getContactInfo, getUserTickets };
