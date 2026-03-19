@@ -137,7 +137,13 @@ const Hero = () => {
                             </div>
                         </motion.div>
 
-                        <motion.h1 className="hero-heading" variants={itemVariants}>
+                        <motion.h1 className="hero-heading" variants={itemVariants} style={{
+                            fontSize: 'clamp(2.5rem, 8vw, 4.5rem)',
+                            fontWeight: 900,
+                            lineHeight: 1.1,
+                            marginBottom: '1.5rem',
+                            textAlign: 'inherit'
+                        }}>
                             <span style={{ color: '#FFF' }}>Invest in the</span><br />
                             <span className="text-gradient">Future of Finance</span>
                         </motion.h1>
@@ -167,8 +173,8 @@ const Hero = () => {
                                     background: 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)',
                                     color: '#000',
                                     border: 'none',
-                                    padding: '18px 50px',
-                                    fontSize: '1.25rem',
+                                    padding: 'clamp(12px, 3vw, 18px) clamp(24px, 5vw, 50px)',
+                                    fontSize: 'clamp(1rem, 3vw, 1.25rem)',
                                     fontWeight: '800',
                                     borderRadius: '16px',
                                     cursor: 'pointer',
@@ -196,8 +202,8 @@ const Hero = () => {
                                     background: 'transparent',
                                     border: '2px solid rgba(255, 255, 255, 0.4)',
                                     color: '#FFF',
-                                    padding: '18px 50px',
-                                    fontSize: '1.25rem',
+                                    padding: 'clamp(12px, 3vw, 18px) clamp(24px, 5vw, 50px)',
+                                    fontSize: 'clamp(1rem, 3vw, 1.25rem)',
                                     fontWeight: '600',
                                     borderRadius: '16px',
                                     cursor: 'pointer',
@@ -213,7 +219,13 @@ const Hero = () => {
                         <motion.div
                             variants={itemVariants}
                             className="hero-feature-pills"
-                            style={{ marginTop: '4rem' }}
+                            style={{ 
+                                marginTop: '4rem',
+                                display: 'flex',
+                                flexWrap: 'wrap',
+                                gap: '1rem',
+                                justifyContent: 'inherit'
+                            }}
                         >
                             {features.map((feature, index) => (
                                 <motion.div

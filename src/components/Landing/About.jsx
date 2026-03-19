@@ -76,7 +76,12 @@ const AIVisual = () => {
             }} />
 
             {/* 3. Central HUD Interface */}
-            <div style={{ position: 'relative', width: '320px', height: '320px', zIndex: 2 }}>
+            <div style={{ 
+                position: 'relative', 
+                width: 'clamp(260px, 90vw, 320px)', 
+                height: 'clamp(260px, 90vw, 320px)', 
+                zIndex: 2 
+            }}>
 
                 {/* Outer Rotating Dash Ring */}
                 <motion.div
@@ -172,7 +177,7 @@ const AIVisual = () => {
                             position: 'absolute',
                             top: '50%',
                             left: '50%',
-                            transform: `translate(-50%, -50%) translateY(-${160 + i * 20}px)`
+                            transform: `translate(-50%, -50%) translateY(clamp(-160px, -40vw, -120px))`
                         }} />
                     </motion.div>
                 ))}

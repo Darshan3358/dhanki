@@ -498,13 +498,14 @@
         grid-template-columns: 1fr;
     }
 
-    .referral-stats {
-        grid-template-columns: 1fr 1fr;
-        gap: 1.25rem;
-    }
-
     .referral-section {
-        display: none !important;
+        display: block !important;
+        margin-top: 1.5rem;
+    }
+    .referral-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
     }
 }
 

@@ -40,7 +40,8 @@ const Header = () => {
         background: scrolled ? 'rgba(10, 14, 23, 0.95)' : 'transparent',
         backdropFilter: scrolled ? 'blur(10px)' : 'none',
         borderBottom: scrolled ? '1px solid rgba(255, 215, 0, 0.1)' : 'none',
-        transition: 'all 0.3s ease'
+        transition: 'all 0.3s ease',
+        boxSizing: 'border-box'
       }}
     >
       <div className="container">
@@ -56,8 +57,8 @@ const Header = () => {
               src={dhanikLogo}
               alt="Dhanik Coin Logo"
               style={{
-                width: '70px',
-                height: '70px',
+                width: 'clamp(50px, 12vw, 70px)',
+                height: 'clamp(50px, 12vw, 70px)',
                 objectFit: 'contain',
                 filter: 'drop-shadow(0 0 8px rgba(255, 215, 0, 0.6)) drop-shadow(0 2px 6px rgba(0,0,0,0.4))'
               }}
@@ -67,7 +68,7 @@ const Header = () => {
           {/* Logo Text */}
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <span style={{
-              fontSize: '1.8rem',
+              fontSize: 'clamp(1.2rem, 4vw, 1.8rem)',
               fontWeight: '800',
               letterSpacing: '1px',
               background: 'linear-gradient(90deg, #fff, #b3b3b3)',
@@ -121,14 +122,15 @@ const Header = () => {
             top: '100%',
             left: 0,
             right: 0,
-            background: 'var(--bg-card)',
-            padding: '2rem',
+            background: 'rgba(10, 14, 23, 0.98)',
+            padding: '2.5rem 2rem',
             display: 'flex',
             flexDirection: 'column',
             gap: '1.5rem',
             alignItems: 'center',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
-            borderBottom: '1px solid rgba(255,255,255,0.1)'
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+            borderBottom: '1px solid rgba(255,215,0,0.1)',
+            backdropFilter: 'blur(15px)'
           }}
         >
           {navLinks.map((link) => (
