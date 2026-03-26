@@ -190,6 +190,7 @@ const Utility = () => {
                                         fontSize: '0.9rem'
                                     }}
                                     whileHover={{ x: 5 }}
+                                    onClick={() => document.getElementById('about').scrollIntoView({ behavior: 'smooth' })}
                                 >
                                     Learn more <FaArrowRight style={{ fontSize: '0.8rem' }} />
                                 </motion.div>

@@ -181,7 +181,7 @@ const Support = () => {
                                         {method.icon}
                                     </div>
                                     <div className="info">
-                                        <h4>{method.name}</h4>
+                                        <h4 style={{ color: method.color }}>{method.name}</h4>
                                         <p>{isPhoneEmpty ? 'No Data' : method.detail}</p>
                                     </div>
                                     {!isPhoneEmpty && <ExternalLink size={16} className="ext-link" />}

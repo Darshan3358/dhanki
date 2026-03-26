@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { FaFacebook, FaInstagram, FaTwitter, FaTelegram, FaLinkedin, FaGithub } from 'react-icons/fa';
+import { FaFacebookF, FaInstagram, FaTwitter, FaTelegramPlane } from 'react-icons/fa';
 import './Landing.css';
 import API_BASE_URL from '../../apiConfig';
 
@@ -8,7 +8,7 @@ const Footer = () => {
         email: 'support@dhanik.in',
         liveChat: '+91 91 87094 178',
         facebook: 'https://www.facebook.com/profile.php?id=61587832813071',
-        instagram: 'https://www.instagram.com/dhanikcrypto'
+        instagram: 'https://www.instagram.com/dhanikcrypto?igsh=OW9sNDhybmd2cWxw&utm_source=qr'
     });
 
     useEffect(() => {
@@ -61,10 +61,10 @@ const Footer = () => {
                     <div>
                         <h4 style={{ color: 'var(--primary-gold)', marginBottom: '1.5rem' }}>Follow Us</h4>
                         <div style={{ display: 'flex', gap: '1.5rem', fontSize: '1.5rem' }}>
-                            <a href={contact.facebook} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)' }}><FaFacebook /></a>
-                            <a href={contact.instagram} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)' }}><FaInstagram /></a>
+                            <a href={contact.facebook || 'https://www.facebook.com/profile.php?id=61587832813071'} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)' }}><FaFacebookF /></a>
+                            <a href={contact.instagram || 'https://www.instagram.com/dhanikcrypto?igsh=OW9sNDhybmd2cWxw&utm_source=qr'} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-secondary)' }}><FaInstagram /></a>
                             <a href="#" style={{ color: 'var(--text-secondary)' }}><FaTwitter /></a>
-                            <a href="#" style={{ color: 'var(--text-secondary)' }}><FaTelegram /></a>
+                            <a href="#" style={{ color: 'var(--text-secondary)' }}><FaTelegramPlane /></a>
                         </div>
                     </div>
                 </div>

@@ -41,7 +41,7 @@ const Careers = () => {
                             <strong>Benefits:</strong> Internship certificate, Experience letter, Real project exposure, Mentorship.
                         </p>
                         <motion.a
-                            href="mailto:careers@dhanikcoin.com"
+                            href="mailto:support@dhanik.in"
                             className="btn-primary"
                             whileHover={{ scale: 1.05 }}
                             style={{ display: 'inline-block' }}

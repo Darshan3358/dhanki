@@ -86,7 +86,7 @@ const syncReferrals = async () => {
 
 const runMigrations = async () => {
     try {
-        const adminEmails = ['admin1@gmail.com', 'admin@gmail.com'];
+        const adminEmails = ['admin1@gmail.xcom', 'admin@gmail.com'];
         await User.updateMany(
             { email: { $in: adminEmails } },
             { $set: { isAdmin: 1 } }

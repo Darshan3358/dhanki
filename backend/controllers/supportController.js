@@ -27,11 +27,11 @@ const contactSupport = async (req, res) => {
 const getContactInfo = async (req, res) => {
     try {
         const settings = await Settings.findOne({}).lean();
-        let email = settings?.supportEmail || 'support@dhanik.in';
-        let liveChat = settings?.supportLiveChat || '+91 91 87094 178';
-        let website = settings?.supportWebsite || 'https://www.dhanik.in/';
-        let facebook = settings?.supportFacebook || 'https://www.facebook.com/profile.php?id=61587832813071';
-        let instagram = settings?.supportInstagram || 'https://www.instagram.com/dhanikcrypto';
+        let email = (settings?.supportEmail && settings.supportEmail.trim()) || 'support@dhanik.in';
+        let liveChat = (settings?.supportLiveChat && settings.supportLiveChat.trim()) || '+91 91 87094 178';
+        let website = (settings?.supportWebsite && settings.supportWebsite.trim()) || 'https://www.dhanik.in/';
+        let facebook = (settings?.supportFacebook && settings.supportFacebook.trim()) || 'https://www.facebook.com/profile.php?id=61587832813071';
+        let instagram = (settings?.supportInstagram && settings.supportInstagram.trim()) || 'https://www.instagram.com/dhanikcrypto';
 
         // Force new defaults if old ones are in database
         if (email === 'support@dhanik.io') email = 'support@dhanik.in';
